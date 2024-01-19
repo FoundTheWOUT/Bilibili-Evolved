@@ -30,7 +30,7 @@ const parseTime = (t: Date, options: any): string => {
 
 enum Position {
   TR = '右上角',
-  TL = '左上角'
+  TL = '左上角',
 }
 
 const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
@@ -62,15 +62,19 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
     })
   })
 
-  addComponentListener(`${metadata.name}.position`, (value: string) => {
-    if (value === Position.TR) {
-      time.style.left = ''
-      time.style.right = '0'
-    } else if (value === Position.TL) {
-      time.style.right = ''
-      time.style.left = '0'
-    }
-  }, true)
+  addComponentListener(
+    `${metadata.name}.position`,
+    (value: string) => {
+      if (value === Position.TR) {
+        time.style.left = ''
+        time.style.right = '0'
+      } else if (value === Position.TL) {
+        time.style.right = ''
+        time.style.left = '0'
+      }
+    },
+    true,
+  )
 
   videoChange(async () => {
     const video = await playerAgent.query.video.wrap()
