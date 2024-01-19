@@ -4,14 +4,10 @@ import {
   applyContentFilter,
   isPreOrderedVideo,
 } from '@/components/feeds/api'
-import { descendingStringSort } from '@/core/utils/sort'
+import { descendingBigIntSort } from '@/core/utils/sort'
 import { logError } from '@/core/utils/log'
 import { setLatestID } from '@/components/feeds/notify'
-import {
-  VLoading,
-  VEmpty,
-  ScrollTrigger,
-} from '@/ui'
+import { VLoading, VEmpty, ScrollTrigger } from '@/ui'
 
 /**
  * 获取用于支持顶栏动态无限滚动的Vue Mixin
@@ -21,7 +17,8 @@ import {
 export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
   type: FeedsCardType,
   jsonMapper: (obj: RawItem) => MappedItem,
-) => (Vue.extend({
+) =>
+  Vue.extend({
     components: {
       VLoading,
       VEmpty,
@@ -36,7 +33,7 @@ export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
     },
     computed: {
       sortedCards() {
-        return ([...this.cards] as MappedItem[]).sort(descendingStringSort(it => it.id))
+        return ([...this.cards] as MappedItem[]).sort(descendingBigIntSort(it => it.id))
       },
     },
     async created() {
@@ -44,7 +41,7 @@ export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
       const cards = this.sortedCards as MappedItem[]
       if (cards.length > 0) {
         setLatestID(cards[0].id)
-      // console.log('setLatestID', cards[0].id)
+        // console.log('setLatestID', cards[0].id)
       }
     },
     methods: {
@@ -59,12 +56,12 @@ export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
             this.hasMorePage = false
             throw new Error(json.message)
           }
-          const jsonCards = lodash.get(json, 'data.cards', []).map(jsonMapper) as MappedItem[]
+          const jsonCards = lodash.get(json, 'data.items', []).map(jsonMapper) as MappedItem[]
 
           let concatCards = applyContentFilter(
             cards
               .concat(jsonCards)
-              .sort(descendingStringSort(it => it.id))
+              .sort(descendingBigIntSort(it => it.id))
               .filter(card => !isPreOrderedVideo(card)),
           )
 
@@ -77,7 +74,8 @@ export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
             this.hasMorePage = false
             return
           }
-          this.hasMorePage = lastCardID === 0 ? true : Boolean(lodash.get(json, 'data.has_more', true))
+          this.hasMorePage =
+            lastCardID === 0 ? true : Boolean(lodash.get(json, 'data.has_more', true))
         } catch (error) {
           logError(error)
         } finally {
@@ -85,4 +83,4 @@ export const nextPageMixin = <MappedItem extends { id: string }, RawItem>(
         }
       },
     },
-  }))
+  })

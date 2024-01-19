@@ -1,9 +1,10 @@
-@import "./dark-definitions";
+@import './dark-definitions';
+@import 'common';
 
 #disable-popup-modal,
 #vip-exchange-modal {
   .vip-exchange .months button.disabled {
-    @include background-color("2");
+    @include background-color('2');
   }
 }
 
@@ -12,7 +13,7 @@
   .sch-pub-btn.disabled,
   .publish-btn.publishing,
   .publish-btn.disabled {
-    @include background-color("2");
+    @include background-color('2');
   }
 }
 .link-footer,
@@ -22,10 +23,10 @@
 .tab-list .tab-item.active:before,
 .player-auxiliary-area .player-auxiliary-bscrollbar .bscroll-indicator,
 .home-content .publish-btn.disabled {
-  @include background-color("2");
+  @include background-color('2');
 }
 .manga-detail .episode-list-component .episode-list .list-header .header-item.selected {
-  @include background-color("3");
+  @include background-color('3');
 }
 .wrapper .elec-btn.disabled,
 .f-list-hover:hover,
@@ -43,18 +44,23 @@
 .main-container .media-info .media-right .media-tool-bar .btn-follow.active,
 .coupon-content-con .coupon-btn-disable,
 .customize-wrp .select {
-  @include background-color("4");
+  @include background-color('4');
 }
 .danmaku-wrap .player-auxiliary-area .player-auxiliary-danmaku-wrap .bscroll-indicator {
-  @include background-color("5");
+  @include background-color('5');
 }
+.bpx-player-auxiliary .bpx-player-dm-wrap,
 .player-auxiliary-area .player-auxiliary-bscrollbar {
   .bscroll-vertical-scrollbar,
   .bscroll-vertical-scrollbar.mousedown,
   &:hover .bscroll-vertical-scrollbar {
     @include background-color();
   }
+  .bscroll-indicator {
+    @include background-color('5');
+  }
 }
+.bpx-player-auxiliary .bpx-player-dm-wrap,
 .danmaku-wrap .player-auxiliary-area .player-auxiliary-danmaku-wrap {
   .bscroll-vertical-scrollbar.mousedown,
   &:hover .bscroll-vertical-scrollbar {
@@ -68,12 +74,12 @@
 blockquote {
   &,
   * {
-    @include color("a");
+    @include color('a');
   }
-  @each $color in "blue", "gray", "green", "lblue", "pink", "purple", "yellow" {
-    @each $value in "01", "02", "03", "04" {
+  @each $color in 'blue', 'gray', 'green', 'lblue', 'pink', 'purple', 'yellow' {
+    @each $value in '01', '02', '03', '04' {
       .color-#{$color}-#{$value} {
-        @include color("a");
+        @include color('a');
       }
     }
   }
@@ -81,30 +87,30 @@ blockquote {
 .open-dialog-masker .open-dialog-content .open-footer .btn-normal.disabled {
   &,
   &:hover {
-    @include color("a");
+    @include color('a');
   }
 }
 .status_box .status_btn.disabled {
-  @include color("a");
+  @include color('a');
 }
 .live-room-app .guard-rank-cntr {
   .tabs.isHundred .item.active {
-    @include color("e");
+    @include color('e');
   }
   &.hundred,
   &.thousand {
     .live-skin-main-a-text,
     .page-box .live-skin-main-text,
     .live-skin-highlight-text {
-      @include color("e");
+      @include color('e');
     }
   }
 }
 .bb-comment .no-login .comment-submit {
   .common &,
   & {
-    @include color("9");
-    @include background-color("4");
+    @include color('9');
+    @include background-color('4');
     @include border-color();
   }
 }
@@ -124,7 +130,7 @@ blockquote {
 .customize-wrp .select,
 .manga-detail .episode-list-component .episode-list .list-data .list-item.last-read,
 .popup-content-ctnr .bl-button--ghost {
-  @include color("e");
+  @include color('e');
 }
 
 .link-footer,
@@ -222,29 +228,32 @@ blockquote {
   @include foreground-color();
 }
 
+#bilibili-player {
+  box-shadow: 0 4px 8px 0 #0004 !important;
+}
 #bilibiliPlayer {
   box-shadow: 0 4px 8px 0 #0004;
-  @include background-color("2");
+  @include background-color('2');
 }
 
 .live-skin-coloration-area {
   .live-skin-separate-area,
   .live-skin-separate-area-hover:hover {
-    @include background-color("2");
+    @include background-color('2');
   }
   .live-skin-normal-a-text {
     &,
     &:link,
     &:visited {
-      @include color("a");
+      @include color('a');
     }
   }
   .live-skin-normal-text {
-    @include color("a");
+    @include color('a');
   }
   .live-skin-main-text,
   .live-skin-highlight-text {
-    @include color("e");
+    @include color('e');
   }
   .live-skin-highlight-border,
   .live-skin-separate-border {
@@ -261,26 +270,26 @@ blockquote {
   }
 }
 
-::-webkit-scrollbar {
-  width: 5px !important;
-  height: 5px !important;
-}
-::-webkit-scrollbar-corner,
-::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-::-webkit-resizer,
-::-webkit-scrollbar-thumb {
-  background: #444 !important;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #555 !important;
-}
-* {
-  scrollbar-color: #444 transparent !important;
-  scrollbar-width: thin !important;
-}
+// ::-webkit-scrollbar {
+//   width: 5px !important;
+//   height: 5px !important;
+// }
+// ::-webkit-scrollbar-corner,
+// ::-webkit-scrollbar-track {
+//   background: transparent !important;
+// }
+// ::-webkit-resizer,
+// ::-webkit-scrollbar-thumb {
+//   background: #444 !important;
+//   border-radius: 3px;
+// }
+// ::-webkit-scrollbar-thumb:hover {
+//   background: #555 !important;
+// }
+// * {
+//   scrollbar-color: #444 transparent !important;
+//   scrollbar-width: thin !important;
+// }
 .members-info .avatar-name__container .is-vip,
 .members-info .wide-members .avatar .is-vip,
 .up-info .up-info_right .name .username.is-vip {
@@ -292,5 +301,268 @@ blockquote {
   }
   .bilibili-player-block-filter-label {
     @include theme-color();
+  }
+}
+.left-container #head-info-vm.head-info-section {
+  @include background-color('4');
+}
+#link-navbar-vm.link-navbar-ctnr {
+  &,
+  & .link-navbar {
+    @include background-color('3');
+  }
+  .nav-item,
+  .nav-item .area-list-panel .list-item,
+  .nav-logo,
+  .shortcuts-ctnr .shortcut-item,
+  .user-panel-ctnr .user-panel .header-node .username-info,
+  .user-panel-ctnr .user-panel .user-level-detail .detail-link {
+    @include color('e');
+  }
+  .link-panel-ctnr .ps__thumb-x,
+  .link-panel-ctnr .ps__thumb-y {
+    @include background-color('4');
+  }
+  .link-panel-ctnr .totally-empty-hint,
+  .nav-item .area-list-panel,
+  .user-panel-ctnr .user-panel,
+  .user-panel-ctnr .user-panel .load-error-panel,
+  .user-panel-ctnr .user-panel .user-level-detail {
+    @include background-color('3');
+  }
+  .right-part > .shortcuts-ctnr .shortcut-item:hover {
+    @include background-color();
+  }
+  .content-ctnr {
+    .items .item .light-name,
+    .items .item .name,
+    .title {
+      @include color('e');
+    }
+  }
+}
+
+.link-navbar-wrap,
+.link-navbar-ctnr {
+  .link-navbar {
+    @include background-color('2');
+    box-shadow: inset 0 -1px #333 !important;
+  }
+  .shortcut-item .list-item:hover {
+    @include background-color();
+  }
+  .link-navbar .main-ctnr .nav-item .area-list-panel {
+    @include background-color('2');
+    @include border-color('3');
+    .list-item:hover {
+      @include background-color('4');
+    }
+  }
+  .showmore-link {
+    .more-label-text {
+      @include color('e');
+    }
+    .down-arrow-icon-block .down-arrow {
+      @include to-white();
+    }
+    .more-tab-content {
+      @include background-color('2');
+      @include border-color('3');
+      .waterfall-item:hover {
+        @include background-color('4');
+      }
+    }
+  }
+  .list-item .startlive-btn {
+    span {
+      @include color('e');
+    }
+  }
+}
+.search-bar-ctnr {
+  .search-bar.search-bar {
+    @include no-shadow();
+    &:hover {
+      @include background-color();
+    }
+  }
+  #nav-searchform {
+    @include background-color();
+    @include border-color('3');
+    &.is-actived,
+    &.is-focus {
+      .nav-search-content {
+        @include background-color('4');
+      }
+    }
+  }
+  .nav-search-clean path {
+    @include fill('a');
+  }
+  .search-btn {
+    &:hover {
+      @include background-color('4');
+    }
+    .search-icon {
+      @include to-white();
+    }
+  }
+  .search-pannel {
+    @include background-color('2');
+    .header {
+      .title {
+        @include color('e');
+      }
+      .clear {
+        @include color('a');
+      }
+    }
+    .histories {
+      .history-item {
+        @include background-color('3');
+        @include color('e');
+      }
+    }
+    .history-fold-wrap {
+      .fold-text {
+        @include color('a');
+      }
+      .fold-icon {
+        @include fill('a');
+      }
+      &:hover {
+        .fold-text {
+          @include theme-color();
+        }
+        .fold-icon {
+          @include theme-fill();
+        }
+      }
+    }
+    .trending {
+      .trending-item {
+        &.active,
+        &:focus,
+        &:hover {
+          @include background-color('3');
+        }
+        .trendings-rank {
+          @include color('a');
+          &.search-rank-top {
+            @include color('e');
+          }
+        }
+        .trending-text {
+          @include color('e');
+        }
+      }
+    }
+  }
+}
+.user-panel-ctnr {
+  .user-panel {
+    @include border-color('3');
+    @include background-color('2');
+    .level-progress {
+      @include background-color('3');
+    }
+    .user-level {
+      @include theme-color();
+    }
+    .section-block {
+      @include background-color();
+    }
+    .battery-content {
+      @include color('e');
+    }
+    .pay-button {
+      @include theme-background-color();
+      @include foreground-color();
+    }
+    .content-ctnr {
+      .control-block {
+        &:hover {
+          @include background-color('4');
+        }
+      }
+      .ctrl-btn {
+        @include color('e');
+        .icon {
+          @include to-white();
+        }
+      }
+      .cut-line {
+        @include border-color('4');
+      }
+      .loginout-btn {
+        @include color('e');
+        .login-out-icon {
+          @include to-white();
+        }
+      }
+    }
+  }
+}
+.link-panel-ctnr {
+  @include background-color('2');
+  @include border-color('3');
+  @include color('e');
+  .load-more-btn {
+    @include background-color();
+    @include color('e');
+    &:hover {
+      @include background-color('4');
+    }
+  }
+}
+.calendar-checkin {
+  @include background-color('2');
+  @include border-color('3');
+  @include color('e');
+  .divider {
+    @include background-color('3');
+  }
+  .title {
+    @include background-color();
+  }
+  .calendar-wrapper {
+    @include background-color();
+  }
+  .checkin-btn {
+    @include background-color();
+    @include color('e');
+    &:hover {
+      @include background-color('4');
+    }
+  }
+}
+.download-panel-ctnr {
+  @include background-color('2');
+  @include border-color('3');
+  @include color('e');
+  .content-ctnr {
+    .title {
+      @include color('e');
+    }
+    .item {
+      .name,
+      .light-name {
+        @include color('e');
+      }
+      .desc {
+        @include color('a');
+      }
+      .download-link {
+        @include color('a');
+        &:hover {
+          @include theme-color();
+        }
+      }
+      &:hover {
+        .light-name {
+          @include theme-color();
+        }
+      }
+    }
   }
 }

@@ -2,9 +2,7 @@
   <div class="be-about-page">
     <div class="be-about-page-header">
       <VIcon icon="mdi-information-outline" />
-      <div class="title-text">
-        关于
-      </div>
+      <div class="title-text">关于</div>
     </div>
     <div class="be-about-page-content">
       <div class="script-meta-info">
@@ -21,26 +19,42 @@
           Commit Hash: {{ meta.compilationInfo.commitHash.substring(0, 8) }}
         </div> -->
       </div>
-      <div class="script-links">
-        <a target="_blank" href="https://github.com/the1812/Bilibili-Evolved" class="homepage script-link">
+      <div v-if="feedbackSupported" class="script-links">
+        <a
+          target="_blank"
+          href="https://github.com/the1812/Bilibili-Evolved"
+          class="homepage script-link"
+        >
           <VButton>
             <VIcon icon="mdi-home-outline" :size="20" />
             主页
           </VButton>
         </a>
-        <a target="_blank" href="https://github.com/the1812/Bilibili-Evolved/issues" class="feedback script-link">
+        <a
+          target="_blank"
+          href="https://github.com/the1812/Bilibili-Evolved/issues"
+          class="feedback script-link"
+        >
           <VButton>
             <VIcon icon="mdi-message-text-outline" :size="18" />
             反馈
           </VButton>
         </a>
-        <a target="_blank" href="https://github.com/the1812/Bilibili-Evolved/releases" class="releases script-link">
+        <a
+          target="_blank"
+          href="https://github.com/the1812/Bilibili-Evolved/releases"
+          class="releases script-link"
+        >
           <VButton>
             <VIcon icon="mdi-update" :size="20" />
             更新日志
           </VButton>
         </a>
-        <a target="_blank" href="https://github.com/the1812/Bilibili-Evolved/blob/preview/doc/donate.md" class="donate script-link">
+        <a
+          target="_blank"
+          href="https://github.com/the1812/Bilibili-Evolved/blob/preview/doc/donate.md"
+          class="donate script-link"
+        >
           <VButton>
             <VIcon icon="mdi-heart-outline" :size="18" />
             捐赠
@@ -66,11 +80,19 @@
 <script lang="ts">
 import { meta } from '@/core/meta'
 import { formatDateTime } from '@/core/utils/formatters'
-import {
-  VButton,
-  VIcon,
-} from '@/ui'
+import { VButton, VIcon } from '@/ui'
 import { AboutPageAction, aboutPageActions } from './about-page'
+
+const feedbackSupported = (() => {
+  const namespace = GM_info.scriptMetaStr.match(/@namespace\s*(.+)/)
+  if (!namespace || !namespace[1]) {
+    return true
+  }
+  if (namespace[1].includes('greasyfork')) {
+    return false
+  }
+  return true
+})()
 
 export default Vue.extend({
   components: {
@@ -81,6 +103,7 @@ export default Vue.extend({
     return {
       meta,
       aboutPageActions,
+      feedbackSupported,
     }
   },
   methods: {
@@ -98,7 +121,7 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-@import "common";
+@import 'common';
 
 .be-about-page {
   flex: 1;
@@ -107,7 +130,7 @@ export default Vue.extend({
     margin-bottom: 12px;
     .title-text {
       font-size: 16px;
-      font-weight: bold;
+      @include semi-bold();
       flex: 1 0 auto;
     }
   }
@@ -127,7 +150,7 @@ export default Vue.extend({
           color: var(--theme-color);
         }
         &-description {
-          opacity: .5;
+          opacity: 0.5;
         }
       }
     }

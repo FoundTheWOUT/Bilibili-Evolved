@@ -1,10 +1,15 @@
 <template>
   <div class="watchlater-list">
     <div class="header">
+      <div class="watchlater-list-summary">共 {{ filteredCards.length }} 个</div>
       <div class="search">
         <TextBox v-model="search" linear placeholder="搜索"></TextBox>
       </div>
-      <a class="operation" target="_blank" href="https://www.bilibili.com/medialist/play/watchlater">
+      <a
+        class="operation"
+        target="_blank"
+        href="https://www.bilibili.com/medialist/play/watchlater"
+      >
         <VButton class="round-button" title="播放全部" round>
           <VIcon icon="mdi-play" :size="18"></VIcon>
         </VButton>
@@ -17,39 +22,21 @@
     </div>
     <VLoading v-if="loading"></VLoading>
     <VEmpty v-else-if="!loading && cards.length === 0"></VEmpty>
-    <transition-group
-      v-else
-      name="cards"
-      tag="div"
-      class="watchlater-list-content"
-    >
-      <div
-        v-for="(card, index) of filteredCards"
-        :key="card.aid"
-        class="watchlater-card"
-      >
-        <a class="cover-container" target="_blank" :href="card.href">
+    <transition-group v-else name="cards" tag="div" class="watchlater-list-content">
+      <div v-for="(card, index) of filteredCards" :key="card.aid" class="watchlater-card">
+        <a class="watchlater-cover-container" target="_blank" :href="card.href">
           <DpiImage
             class="cover"
             :src="card.coverUrl"
             :size="{ width: 130, height: 85 }"
           ></DpiImage>
-          <div
-            class="floating remove"
-            title="移除"
-            @click.prevent="remove(card.aid, index)"
-          >
+          <div class="floating remove" title="移除" @click.prevent="remove(card.aid, index)">
             <VIcon icon="mdi-close" :size="16"></VIcon>
           </div>
           <div class="floating duration">{{ card.durationText }}</div>
           <div v-if="card.complete" class="floating viewed">已观看</div>
         </a>
-        <a
-          class="title"
-          target="_blank"
-          :href="card.href"
-          :title="card.title"
-        >{{ card.title }}</a>
+        <a class="title" target="_blank" :href="card.href" :title="card.title">{{ card.title }}</a>
         <a
           class="up"
           target="_blank"
@@ -72,14 +59,7 @@ import {
   RawWatchlaterItem,
   toggleWatchlater,
 } from '@/components/video/watchlater'
-import {
-  VLoading,
-  VEmpty,
-  TextBox,
-  VButton,
-  VIcon,
-  DpiImage,
-} from '@/ui'
+import { VLoading, VEmpty, TextBox, VButton, VIcon, DpiImage } from '@/ui'
 import { popperMixin } from '../mixins'
 
 interface WatchlaterCard {
@@ -179,29 +159,22 @@ export default Vue.extend({
     async remove(aid: number, index: number) {
       this.cards.splice(index, 1)
       await this.toggleWatchlater(aid)
-      this.lastRemovedAid = aid
-    },
-    async undo() {
-      const aid = this.lastRemovedAid
-      if (aid !== 0) {
-        await this.toggleWatchlater(aid)
-      }
     },
     updateFilteredCards: lodash.debounce(function updateFilteredCards() {
       const search = this.search.toLowerCase()
       const cardsList = this.$el.querySelector('.watchlater-list-content') as HTMLElement
       cardsList.scrollTo(0, 0)
-      this.filteredCards = (this.cards as WatchlaterCard[]).filter(card => (
-        card.title.toLowerCase().includes(search)
-          || card.upName.toLowerCase().includes(search)
-      ))
+      this.filteredCards = (this.cards as WatchlaterCard[]).filter(
+        card =>
+          card.title.toLowerCase().includes(search) || card.upName.toLowerCase().includes(search),
+      )
     }, 100),
   },
 })
 </script>
 <style lang="scss">
-@import "common";
-@import "../popup";
+@import 'common';
+@import '../popup';
 
 .custom-navbar .watchlater-list {
   @include navbar-popup-height();
@@ -231,13 +204,17 @@ export default Vue.extend({
     cursor: pointer;
   }
   .header {
-    @include h-stretch();
+    @include h-center();
     justify-content: space-between;
     align-self: stretch;
     margin: 16px 12px;
+    .watchlater-list-summary {
+      margin-right: 6px;
+    }
     .search {
       position: relative;
       flex-grow: 1;
+      align-self: stretch;
       margin-right: 8px;
       .be-textbox {
         height: 100%;
@@ -308,7 +285,7 @@ export default Vue.extend({
       &:hover .cover {
         transform: scale(1.05);
       }
-      .cover-container {
+      .watchlater-cover-container {
         grid-area: cover;
         overflow: hidden;
         border-radius: 8px 0 0 8px;
@@ -347,7 +324,7 @@ export default Vue.extend({
       .title {
         grid-area: title;
         font-size: 13px;
-        font-weight: bold;
+        @include semi-bold();
         margin: 0;
         margin-top: 8px;
         padding: 0 10px;
@@ -392,17 +369,6 @@ export default Vue.extend({
           color: var(--theme-color);
         }
       }
-    }
-  }
-  .undo {
-    position: absolute;
-    bottom: 16px;
-    left: 50%;
-    opacity: 0;
-    transform: translateX(-50%) translateY(8px);
-    &.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0px);
     }
   }
 }

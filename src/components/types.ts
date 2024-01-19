@@ -1,9 +1,4 @@
-import {
-  TestPattern,
-  Executable,
-  VueModule,
-  I18nDescription,
-} from '@/core/common-types'
+import { TestPattern, Executable, VueModule, I18nDescription } from '@/core/common-types'
 import { ComponentSettings } from '@/core/settings'
 import { CoreApis } from '@/core/core-apis'
 import { PluginMinimalData } from '@/plugins/plugin'
@@ -48,8 +43,7 @@ export interface ComponentTag {
 
 type ComponentOptionValidator<T> = (value: T, oldValue: T) => T | undefined | null
 
-// TODO: 参考 discussion #3041。当不兼容代码替换完成后将 any 改为 unknown
-export type UnknownOptions = Record<string, any>
+export type UnknownOptions = Record<string, unknown>
 
 export type EmptyOptions = Record<string, never>
 
@@ -72,18 +66,16 @@ export interface OptionMetadata<V = unknown> {
     step?: number
   }
   /** `number`, `string`或`Range`类型的选项, 可以添加验证函数来阻止非法输入 */
-  validator?: ComponentOptionValidator<Range<string>> |
-  ComponentOptionValidator<string> | ComponentOptionValidator<number>
+  validator?:
+    | ComponentOptionValidator<Range<string>>
+    | ComponentOptionValidator<string>
+    | ComponentOptionValidator<number>
 }
 
 /** 多个选项的信息 */
 export type OptionsMetadata<O extends UnknownOptions = UnknownOptions> = {
   [OptionName in keyof O]: OptionMetadata<O[OptionName]>
 }
-
-// TODO: 参考 discussion #3041。当不兼容代码替换完成后删除
-export type ComponentOptions = OptionsMetadata
-export type ComponentOption = OptionMetadata
 
 /** 组件标签 */
 export const componentsTags = {
@@ -154,41 +146,25 @@ export const componentsTags = {
   } as ComponentTag,
 }
 
-/**
- * 从 OptionalOptionsMetadata 中获取 Options 信息。
- * 当其为 undefined 时，返回类型 EmptyOptions。
- */
-export type OptionsFromOptionalMetadata<M extends OptionalOptionsMetadata> = (
-  M extends undefined | Record<string, never> ? EmptyOptions :
-    M extends OptionsMetadata<infer O> ? O : never
-)
-
 /** 组件入口函数的参数 */
-export interface ComponentEntryContext<
-  Om extends OptionalOptionsMetadata = OptionalOptionsMetadata
-> {
+export interface ComponentEntryContext<O extends UnknownOptions = UnknownOptions> {
   /** 当前组件的设置 */
-  settings: ComponentSettings<OptionsFromOptionalMetadata<Om>>
+  settings: ComponentSettings<O>
   /** 当前组件的信息 */
-  metadata: ComponentMetadata<Om>
+  metadata: ComponentMetadata<O>
   /** 核心 API */
   coreApis: CoreApis
 }
 
 /** 组件入口函数 */
-export type ComponentEntry<
-  Om extends OptionalOptionsMetadata = OptionalOptionsMetadata,
-  T = unknown
-> = (
-  context: ComponentEntryContext<Om>
+export type ComponentEntry<O extends UnknownOptions = UnknownOptions, T = unknown> = (
+  context: ComponentEntryContext<O>,
 ) => T | Promise<T>
 
 /** 带有函数/复杂对象的组件信息 */
-export interface FunctionalMetadata<
-  Om extends OptionalOptionsMetadata = OptionalOptionsMetadata
-> {
+export interface FunctionalMetadata<O extends UnknownOptions = UnknownOptions> {
   /** 主入口, 重新开启时不会再运行 */
-  entry: ComponentEntry<Om>
+  entry: ComponentEntry<O>
   /** 导出小组件 */
   widget?: Omit<Widget, 'name'>
   /** 首屏样式, 会尽快注入 (before DCL) */
@@ -212,17 +188,14 @@ export interface FunctionalMetadata<
   urlInclude?: TestPattern
   /** 设置不匹配的URL, 不匹配则不运行此组件, 优先级高于`urlInclude` */
   urlExclude?: TestPattern
+  /** i18n 数据 */
+  i18n?: Record<string, LanguagePack | Executable<LanguagePack>>
 }
 
-/** ComponentMetadata 的类型参数，用于表达其可选参数 options 的类型 */
-export type OptionalOptionsMetadata<O extends UnknownOptions = UnknownOptions> = (
-  OptionsMetadata<O> | undefined
-)
-
 /** 组件基本信息 */
-export interface ComponentMetadata<
-  Om extends OptionalOptionsMetadata = OptionalOptionsMetadata
-> extends FeatureBase, FunctionalMetadata<Om> {
+export interface ComponentMetadata<O extends UnknownOptions = UnknownOptions>
+  extends FeatureBase,
+    FunctionalMetadata<O> {
   /** 组件名称 */
   name: string
   /** 显示名称 */
@@ -236,10 +209,13 @@ export interface ComponentMetadata<
   /**  是否在设置界面中隐藏 (代码仍可操作) */
   hidden?: boolean
   /** 组件子选项 */
-  options?: Om
-  /** i18n 数据 */
-  i18n?: Record<string, LanguagePack>
+  options?: OptionsMetadata<O>
+  /** 是否支持热重载 */
+  // allowHotReload?: boolean
 }
 
 /** 用户组件的非函数基本信息, 用于直接保存为 JSON */
 export type UserComponentMetadata = Omit<ComponentMetadata, keyof FunctionalMetadata>
+
+/** 推断 Record 的 Value 类型 */
+export type RecordValue<R> = R extends Record<any, infer V> ? V : never

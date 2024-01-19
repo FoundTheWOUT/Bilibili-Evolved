@@ -1,5 +1,5 @@
 import { waitForControlBar } from '@/components/live/live-control-bar'
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { select as spinSelect } from '@/core/spin-query'
 import { addStyle, removeStyle } from '@/core/style'
 import { liveUrls } from '@/core/utils/urls'
@@ -15,6 +15,7 @@ import componentStyle from './gift-box.scss'
 
 // 指示是否为全屏模式的 class，出现于 body 元素上
 const fullWinClass = 'player-full-win'
+const fullScreenClass = 'fullscreen-fix'
 
 // 直播播放器的 id
 const livePlayerId = 'live-player'
@@ -46,7 +47,7 @@ let stopObservingMouseLeavePlayer: StopObservingCallback | null = null
 interface FullWinToggleCallback {
   (
     // 标识监听到的动作是启动操作还是关闭操作
-    isStarted: boolean
+    isStarted: boolean,
   ): void
 }
 
@@ -67,7 +68,10 @@ async function queryGiftBtnParent(): Promise<Element | null> {
 
 // 当前是否为全屏模式
 function isFullWin(): boolean {
-  return document.body.classList.contains(fullWinClass)
+  return (
+    document.body.classList.contains(fullWinClass) ||
+    document.body.classList.contains(fullScreenClass)
+  )
 }
 
 /**
@@ -75,9 +79,7 @@ function isFullWin(): boolean {
  * @param callback 回调函数
  * @returns 停止监听的函数
  */
-function observeFullWinToggle(
-  onToggle: FullWinToggleCallback,
-): StopObservingCallback {
+function observeFullWinToggle(onToggle: FullWinToggleCallback): StopObservingCallback {
   /**
    * 检查是否发生了全屏模式的变化
    * @param {MutationRecord} mutation body 元素的属性变化（不检查变化类型）
@@ -86,7 +88,8 @@ function observeFullWinToggle(
   function analyzeMutation(mutation: MutationRecord): boolean | null {
     const curContainsFullWinClass = isFullWin()
     const prevClassList = mutation.oldValue.split(' ')
-    const prevContainsFullWinClass = prevClassList.includes(fullWinClass)
+    const prevContainsFullWinClass =
+      prevClassList.includes(fullWinClass) || prevClassList.includes(fullScreenClass)
     // console.debug(`[${componentName}]`, { curContainsFullWinClass, prevContainsFullWinClass })
     if (curContainsFullWinClass === prevContainsFullWinClass) {
       return null
@@ -113,10 +116,7 @@ function observeFullWinToggle(
 }
 
 // 将包裹按钮移动到控制条上
-function moveGiftPackageToControlBar(
-  controlBar: Element,
-  giftBtn0: Element,
-) {
+function moveGiftPackageToControlBar(controlBar: Element, giftBtn0: Element) {
   // console.debug(`[${componentName}] moving gift button to control bar...`)
   const rightArea = dq(controlBar, '.right-area')
   if (rightArea) {
@@ -159,14 +159,9 @@ function onFullWinClose(giftBtn0: Element, originGiftBtnParent: Element) {
 }
 
 // 每当全屏模式切换时执行操作
-function doOnFullWinToggle(
-  giftBtn0: Element,
-  originGiftBtnParent: Element,
-): StopObservingCallback {
+function doOnFullWinToggle(giftBtn0: Element, originGiftBtnParent: Element): StopObservingCallback {
   return observeFullWinToggle(isStarted => {
-    isStarted
-      ? onFullWinStart(giftBtn0)
-      : onFullWinClose(giftBtn0, originGiftBtnParent)
+    isStarted ? onFullWinStart(giftBtn0) : onFullWinClose(giftBtn0, originGiftBtnParent)
   })
 }
 
@@ -195,7 +190,7 @@ async function reload() {
   addStyle(componentStyle, componentName)
 
   const giftBtnParent = await queryGiftBtnParent()
-  giftBtn = (giftBtnParent?.children[0])
+  giftBtn = giftBtnParent?.children[0]
 
   if (giftBtnParent && giftBtn) {
     stopObservingFullWinToggle = doOnFullWinToggle(giftBtn, giftBtnParent)
@@ -220,7 +215,7 @@ function unload() {
   removeStyle(componentName)
 }
 
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: componentName,
   displayName: '直播全屏包裹',
   description: {
@@ -231,4 +226,4 @@ export const component: ComponentMetadata = {
   entry,
   reload,
   unload,
-}
+})

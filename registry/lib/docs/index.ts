@@ -1,4 +1,4 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { cdnRoots } from '@/core/cdn-types'
 import { branches } from '@/core/meta'
 import { getComponentsDoc } from './components-doc'
@@ -33,21 +33,26 @@ const entry = () => {
     const rootPath = '../../registry/dist/'
     const getDocText = (title: string, items: DocSourceItem[]) => {
       const docText = items.map(it => {
-        const {
-          name,
-          displayName,
-          description,
-          fullAbsolutePath,
-          fullRelativePath,
-          owner,
-        } = it
+        const { name, displayName, description, fullAbsolutePath, fullRelativePath, owner } = it
         const item = `
 ### [${displayName}](${fullRelativePath})
 \`${name}\`
 
-**jsDelivr:** [\`Stable\`](${cdnRoots.jsDelivr(branches.stable, owner)}${fullAbsolutePath}) / [\`Preview\`](${cdnRoots.jsDelivr(branches.preview, owner)}${fullAbsolutePath})
+**jsDelivr:** [\`Stable\`](${cdnRoots.jsDelivr(
+          branches.stable,
+          owner,
+        )}${fullAbsolutePath}) / [\`Preview\`](${cdnRoots.jsDelivr(
+          branches.preview,
+          owner,
+        )}${fullAbsolutePath})
 
-**GitHub:** [\`Stable\`](${cdnRoots.GitHub(branches.stable, owner)}${fullAbsolutePath}) / [\`Preview\`](${cdnRoots.GitHub(branches.preview, owner)}${fullAbsolutePath})
+**GitHub:** [\`Stable\`](${cdnRoots.GitHub(
+          branches.stable,
+          owner,
+        )}${fullAbsolutePath}) / [\`Preview\`](${cdnRoots.GitHub(
+          branches.preview,
+          owner,
+        )}${fullAbsolutePath})
 
 ${description || ''}
         `.trim()
@@ -68,10 +73,7 @@ ${getDocText(componentsDoc.title, componentsDoc.items)}
 ${getDocText(pluginsDoc.title, pluginsDoc.items)}
 
 `.trim()
-    const featuresJson = JSON.stringify([
-      ...componentsDoc.items,
-      ...pluginsDoc.items,
-    ], undefined, 2)
+    const featuresJson = JSON.stringify([...componentsDoc.items, ...pluginsDoc.items], undefined, 2)
 
     const packData = await generatePackageDocs(componentsDoc.items.concat(pluginsDoc.items))
 
@@ -90,7 +92,7 @@ ${getDocText(pluginsDoc.title, pluginsDoc.items)}
     }
   }
 }
-export const doc: ComponentMetadata = {
+export const doc = defineComponentMetadata({
   name: 'featureDocsGenerator',
   displayName: '功能文档生成器',
   entry,
@@ -99,4 +101,4 @@ export const doc: ComponentMetadata = {
     delete unsafeWindow.generateDocs
   },
   tags: [componentsTags.utils],
-}
+})

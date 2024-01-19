@@ -12,7 +12,16 @@ export const compatibilityPatch = () => {
       'https://live.bilibili.com/blackboard/dropdown-menu.html',
       'https://www.bilibili.com/page-proxy/game-nav.html',
     ]
-    document.documentElement.classList.toggle('iframe', isIframe() && transparentFrames.some(matchUrlPattern))
+    document.documentElement.classList.toggle(
+      'iframe',
+      isIframe() && transparentFrames.some(matchUrlPattern),
+    )
+
+    const { allVideoUrls } = await import('@/core/utils/urls')
+    if (allVideoUrls.some(url => matchUrlPattern(url))) {
+      const { playerPolyfill } = await import('@/components/video/player-adaptor')
+      playerPolyfill()
+    }
   })
   fullyLoaded(() => {
     select('meta[name=spm_prefix]').then(spm => {
@@ -26,7 +35,7 @@ export const compatibilityPatch = () => {
       }
     })
   })
-  if (!('requestIdleCallback' in window)) {
+  if (typeof requestIdleCallback === 'undefined') {
     window.requestIdleCallback = (callback: TimerHandler) => window.setTimeout(callback, 0)
     window.cancelIdleCallback = (handle: number) => {
       window.clearTimeout(handle)

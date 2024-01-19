@@ -1,4 +1,4 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { CommentItem, CommentReplyItem } from '@/components/utils/comment-apis'
 import { matchUrlPattern } from '@/core/utils'
 import { feedsUrls } from '@/core/utils/urls'
@@ -31,29 +31,23 @@ const entry = async () => {
           action: async () => {
             const url = findParentFeedsUrl(item.element) || document.URL.replace(location.hash, '')
             await navigator.clipboard.writeText(`${url}#reply${item.id}`)
-            const operaList = dq(item.element, '.opera-list') as HTMLElement
-            if (operaList) {
-              operaList.style.display = 'none'
-            }
           },
         })
       })
     }
     processItems([comment, ...comment.replies])
-    comment.onRepliesUpdate = replies => processItems(replies)
+    comment.addEventListener('repliesUpdate', e => processItems(e.detail))
   }
   forEachCommentItem({
     added: addCopyLinkButton,
   })
 }
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: 'copyCommentsLink',
   displayName: '复制评论链接',
   description: {
     'zh-CN': '开启后, 可在每条评论的菜单中选择复制链接.',
   },
   entry,
-  tags: [
-    componentsTags.utils,
-  ],
-}
+  tags: [componentsTags.utils],
+})

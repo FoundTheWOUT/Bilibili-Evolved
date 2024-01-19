@@ -1,10 +1,7 @@
 <template>
   <div class="ranking-popup" role="list">
     <div v-for="e of entries" :key="e.name" class="ranking-entry" role="listitem">
-      <a
-        target="_blank"
-        :href="e.href"
-      >{{ e.name }}</a>
+      <a target="_blank" :href="e.href">{{ e.name }}</a>
     </div>
   </div>
 </template>
@@ -32,6 +29,14 @@ const entries = [
   {
     href: 'https://www.bilibili.com/v/popular/rank/all',
     name: '排行榜',
+  },
+  {
+    href: 'https://www.bilibili.com/v/popular/music',
+    name: '全站音乐榜',
+  },
+  {
+    href: 'https://www.bilibili.com/v/popular/drama',
+    name: '短剧榜',
   },
 ] as RankingEntry[]
 export default Vue.extend({

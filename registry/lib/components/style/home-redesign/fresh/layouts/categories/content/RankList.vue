@@ -4,11 +4,7 @@
       <VLoading v-if="loading" />
       <div v-if="(error || items.length === 0) && !loading" class="fresh-home-rank-list-empty">
         <VEmpty />
-        <VButton
-          class="fresh-home-rank-list-refresh-button"
-          round
-          @click="reload"
-        >
+        <VButton class="fresh-home-rank-list-refresh-button" round @click="reload">
           <VIcon icon="mdi-refresh" />
           刷新
         </VButton>
@@ -25,11 +21,7 @@
         >
           {{ firstItem.title }}
         </a>
-        <a
-          class="fresh-home-rank-list-cover"
-          target="_blank"
-          :href="firstItem.videoHref"
-        >
+        <a class="fresh-home-rank-list-cover" target="_blank" :href="firstItem.videoHref">
           <DpiImage
             :src="firstItem.coverUrl"
             :size="{ width: ui.firstCoverWidth, height: ui.firstCoverHeight }"
@@ -51,15 +43,8 @@
         <div class="fresh-home-rank-list-laser" data-number="1"></div>
       </div>
       <div v-if="secondItem" class="fresh-home-rank-list-second-item animation">
-        <a
-          class="fresh-home-rank-list-rank-item"
-          target="_blank"
-          :href="secondItem.videoHref"
-        >
-          <div
-            class="fresh-home-rank-list-rank-item-title"
-            :title="secondItem.title"
-          >
+        <a class="fresh-home-rank-list-rank-item" target="_blank" :href="secondItem.videoHref">
+          <div class="fresh-home-rank-list-rank-item-title" :title="secondItem.title">
             {{ secondItem.title }}
           </div>
           <UpInfo
@@ -78,11 +63,7 @@
             {{ secondItem.playCount | formatCount }}
           </div>
         </a>
-        <a
-          class="fresh-home-rank-list-cover"
-          target="_blank"
-          :href="secondItem.videoHref"
-        >
+        <a class="fresh-home-rank-list-cover" target="_blank" :href="secondItem.videoHref">
           <DpiImage
             :src="secondItem.coverUrl"
             :size="{ width: ui.secondCoverWidth, height: ui.secondCoverHeight }"
@@ -91,15 +72,8 @@
         <div class="fresh-home-rank-list-laser" data-number="2"></div>
       </div>
       <div v-if="thirdItem" class="fresh-home-rank-list-third-item animation">
-        <a
-          class="fresh-home-rank-list-rank-item"
-          target="_blank"
-          :href="thirdItem.videoHref"
-        >
-          <div
-            class="fresh-home-rank-list-rank-item-title"
-            :title="thirdItem.title"
-          >
+        <a class="fresh-home-rank-list-rank-item" target="_blank" :href="thirdItem.videoHref">
+          <div class="fresh-home-rank-list-rank-item-title" :title="thirdItem.title">
             {{ thirdItem.title }}
           </div>
           <UpInfo
@@ -113,16 +87,12 @@
           </UpInfo>
           <div class="fresh-home-rank-list-stats">
             <VIcon icon="mdi-fire" :size="16" />
-            {{ secondItem.points | formatCount }}
+            {{ thirdItem.points | formatCount }}
             <VIcon icon="play" :size="16" />
-            {{ secondItem.playCount | formatCount }}
+            {{ thirdItem.playCount | formatCount }}
           </div>
         </a>
-        <a
-          class="fresh-home-rank-list-cover"
-          target="_blank"
-          :href="thirdItem.videoHref"
-        >
+        <a class="fresh-home-rank-list-cover" target="_blank" :href="thirdItem.videoHref">
           <DpiImage
             :src="thirdItem.coverUrl"
             :size="{ width: ui.thirdCoverWidth, height: ui.thirdCoverHeight }"
@@ -136,14 +106,8 @@
 <script lang="ts">
 import UpInfo from '@/components/feeds/UpInfo.vue'
 import { formatCount } from '@/core/utils/formatters'
-import {
-  DpiImage,
-  VIcon,
-  VLoading,
-  VEmpty,
-  VButton,
-} from '@/ui'
-import { requestMixin, cssVariableMixin } from './mixin'
+import { DpiImage, VIcon, VLoading, VEmpty, VButton } from '@/ui'
+import { requestMixin, cssVariableMixin } from '../../../../mixin'
 import { rankListCssVars } from './rank-list'
 
 export default Vue.extend({
@@ -158,10 +122,7 @@ export default Vue.extend({
   filters: {
     formatCount,
   },
-  mixins: [
-    requestMixin,
-    cssVariableMixin(rankListCssVars),
-  ],
+  mixins: [requestMixin(), cssVariableMixin(rankListCssVars)],
   props: {
     parseJson: {
       type: Function,
@@ -201,13 +162,14 @@ export default Vue.extend({
 })
 </script>
 <style lang="scss">
-@import "common";
+@import 'common';
+@import './rank-list';
 
 .fresh-home-rank-list {
   position: relative;
   flex: 1;
-  width: 400px;
   overflow: hidden;
+  width: var(--panel-width);
   min-height: var(--panel-height);
   height: var(--panel-height);
   padding: var(--padding);
@@ -225,7 +187,7 @@ export default Vue.extend({
   & &-stats {
     @include h-center(12px);
     font-size: 12px;
-    opacity: .5;
+    opacity: 0.5;
     margin: 0 10px;
     .be-icon {
       margin-right: -8px;
@@ -243,7 +205,7 @@ export default Vue.extend({
 
     &-title {
       @include semi-bold();
-      transition: color .2s ease-out;
+      transition: color 0.2s ease-out;
       line-height: var(--rank-item-title-height);
       box-sizing: content-box;
       &:hover {
@@ -266,7 +228,7 @@ export default Vue.extend({
       }
     }
     @include v-stretch();
-    animation: .4s var(--animation-timing) first-animation paused both;
+    animation: 0.4s var(--animation-timing) first-animation paused both;
     position: absolute;
     top: var(--padding);
     left: var(--padding);
@@ -317,7 +279,7 @@ export default Vue.extend({
       }
     }
     @include v-stretch();
-    animation: .4s var(--animation-timing) second-animation paused both;
+    animation: 0.4s var(--animation-timing) second-animation paused both;
     position: absolute;
     top: var(--offset-second);
     bottom: var(--padding);
@@ -334,7 +296,7 @@ export default Vue.extend({
         padding: 0 12px;
       }
       .be-up-info {
-        margin: 4px 8px;
+        margin: 4px 10px;
       }
     }
   }
@@ -350,7 +312,7 @@ export default Vue.extend({
       }
     }
     @include v-stretch();
-    animation: .4s var(--animation-timing) third-animation paused both;
+    animation: 0.4s var(--animation-timing) third-animation paused both;
     position: absolute;
     top: var(--offset-third);
     right: var(--padding);
@@ -367,7 +329,7 @@ export default Vue.extend({
         padding: 0 12px;
       }
       .be-up-info {
-        margin: 4px 8px;
+        margin: 4px 10px;
       }
     }
   }
@@ -379,7 +341,7 @@ export default Vue.extend({
     box-shadow: none;
     overflow: hidden;
     transform-origin: bottom;
-    transition: .2s ease-out;
+    transition: 0.2s ease-out;
     position: relative;
 
     img {
@@ -398,18 +360,14 @@ export default Vue.extend({
     flex: 1;
     width: 4px;
     border-radius: 2px;
-    background-image: linear-gradient(
-      to bottom,
-      var(--theme-color) 0%,
-      var(--theme-color-10) 100%
-    );
+    background-image: linear-gradient(to bottom, var(--theme-color) 0%, var(--theme-color-10) 100%);
     &::after {
       content: attr(data-number);
       @include absolute-center();
       @include h-center();
+      @include semi-bold();
       justify-content: center;
       top: 0;
-      font-weight: bold;
       width: 28px;
       height: 28px;
       border-radius: 50%;
@@ -417,34 +375,12 @@ export default Vue.extend({
       color: var(--foreground-color);
     }
   }
-  & &-loading-container {
-    @include v-center();
-    justify-content: center;
-    padding: var(--padding);
-    border-radius: var(--home-card-radius);
-    border: 2px dashed #8884;
-    height: 100%;
-  }
-  & &-empty {
-    @include v-center(12px);
-    justify-content: center;
-    .be-button {
-      padding: 4px 10px 4px 6px !important;
-      &:hover .be-icon {
-        transform: rotate(1turn);
-      }
-    }
-    .be-icon {
-      margin-right: 6px;
-      transition: .5s ease-out;
-    }
-  }
-
   &.loaded {
     @include no-scrollbar();
     .animation {
       animation-play-state: running;
     }
   }
+  @include rank-list-common();
 }
 </style>

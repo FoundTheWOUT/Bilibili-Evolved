@@ -52,7 +52,6 @@ div#square.container,
 .banner-wrapper .swiper-pagination-bullet,
 .nav-header-wrapper .nav-header .nav-header-search-bar-wrapper .suggestion-list,
 .project-list .project-list-item .project-list-item-img,
-.download-video-panel,
 .medal-popup,
 .article-action .ops .share-container .weixin-holder,
 .coin-wrap,
@@ -89,8 +88,7 @@ div#square.container,
     background-color: #222 !important;
 }
 .article-holder .error-card .video-holder .video-cover,
-.article-holder .error-card .video-holder p,
-.player-auxiliary-danmaku-function .player-auxiliary-danmaku-multiple-control
+.article-holder .error-card .video-holder p
 {
     background-color: #333 !important;
 }

@@ -1,14 +1,14 @@
 <template>
   <div
     tabindex="0"
-    class="action-item suggest-item"
-    :title="action.name"
+    class="be-launch-bar-action-item suggest-item"
+    :title="action.displayName || action.name"
     :data-indexer="action.indexer"
     @click.self="performAction($event)"
     @keydown.enter.prevent.stop="performAction($event)"
     @keydown.shift.delete.prevent.stop="performDelete($event)"
-    @keydown.up.prevent.stop="$emit('previous-item', $event)"
-    @keydown.down.prevent.stop="$emit('next-item', $event)"
+    @keydown.up.prevent.stop="$emit('previous-item', $event.currentTarget)"
+    @keydown.down.prevent.stop="$emit('next-item', $event.currentTarget)"
   >
     <div class="suggest-item-content">
       <div v-if="action.icon" class="suggest-item-icon" @click="performAction($event)">
@@ -22,7 +22,7 @@
           :name="action.name"
         ></component>
         <div v-else class="suggest-item-name">
-          {{ action.title || action.name }}
+          {{ action.displayName || action.name }}
         </div>
         <div v-if="action.description" class="suggest-item-description">
           {{ action.description }}
@@ -53,22 +53,24 @@ export default Vue.extend({
     },
   },
   methods: {
-    performAction(event: KeyboardEvent | MouseEvent) {
-      this.action.action()
-      this.$emit('action', event)
+    async performAction(event: KeyboardEvent | MouseEvent) {
+      const { currentTarget } = event
+      await this.action.action()
+      this.$emit('action', currentTarget)
     },
-    performDelete(event: KeyboardEvent | MouseEvent) {
+    async performDelete(event: KeyboardEvent | MouseEvent) {
+      const { currentTarget } = event
       if (!this.action.deleteAction) {
         return
       }
-      this.action.deleteAction()
-      this.$emit('delete-item', event)
+      await this.action.deleteAction()
+      this.$emit('delete-item', currentTarget)
     },
   },
 })
 </script>
 <style lang="scss">
-@import "common";
+@import 'common';
 
 .suggest-item {
   outline: none !important;

@@ -1,7 +1,7 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { allVideoUrls } from '@/core/utils/urls'
 
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: 'playerShadow',
   displayName: '播放器投影',
   entry: none,
@@ -11,12 +11,9 @@ export const component: ComponentMetadata = {
       style: () => import('./player-shadow.scss'),
     },
   ],
-  tags: [
-    componentsTags.style,
-    componentsTags.video,
-  ],
+  tags: [componentsTags.style, componentsTags.video],
   description: {
     'zh-CN': '为播放器添加主题色投影.',
   },
   urlInclude: allVideoUrls,
-}
+})

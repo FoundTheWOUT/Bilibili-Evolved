@@ -29,15 +29,13 @@ export const styles: Required<UserStyle>[] = Object.values(settings.userStyles)
 export const installStyle = async (input: UserStyle | string) => {
   try {
     let userStyle: UserStyle
-    const { parseExternalInput } = await import('../core/external-input')
+    const { loadFeatureCode } = await import('@/core/external-input')
     if (typeof input === 'string') {
-      userStyle = await parseExternalInput<UserStyle>(input)
+      userStyle = loadFeatureCode(input) as UserStyle
     } else {
       userStyle = input
     }
-    const {
-      name, style, displayName, mode,
-    } = userStyle
+    const { name, style, displayName, mode } = userStyle
     const { removeStyle, addImportantStyle, addStyle } = await import('@/core/style')
     const existingStyle = settings.userStyles[name]
     if (existingStyle) {
@@ -61,8 +59,8 @@ export const installStyle = async (input: UserStyle | string) => {
       metadata: userStyle,
       message: `已安装样式'${displayName || name}'`,
     }
-  } catch (error) {
-    throw new Error('无效的样式代码')
+  } catch (e) {
+    throw new Error('无效的样式代码', { cause: e })
   }
 }
 /**
@@ -70,13 +68,12 @@ export const installStyle = async (input: UserStyle | string) => {
  * @param nameOrDisplayName 样式的名称(`name`或`displayName`)
  */
 export const uninstallStyle = async (nameOrDisplayName: string) => {
-  const existingStyle = Object.entries(settings.userStyles)
-    .find(([name, { displayName }]) => {
-      if (name === nameOrDisplayName || displayName === nameOrDisplayName) {
-        return true
-      }
-      return false
-    })
+  const existingStyle = Object.entries(settings.userStyles).find(([name, { displayName }]) => {
+    if (name === nameOrDisplayName || displayName === nameOrDisplayName) {
+      return true
+    }
+    return false
+  })
   if (!existingStyle) {
     throw new Error(`没有找到与名称'${nameOrDisplayName}'相关联的样式`)
   }

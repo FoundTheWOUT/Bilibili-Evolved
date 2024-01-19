@@ -18,7 +18,8 @@
       line-height: inherit;
     }
 
-    .popup::before, .popup::after {
+    .popup::before,
+    .popup::after {
       left: auto;
       right: calc(1em + 33px);
       transform: translateX(50%);
@@ -29,25 +30,47 @@
   .gift-package {
     margin: auto;
     width: auto;
-    height: auto;
+    height: 100%;
     color: inherit;
     fill: inherit;
     background: inherit !important;
 
+    &-btn {
+      padding-top: 0 !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      &:hover {
+        background-color: transparent !important;
+        color: #fff !important;
+      }
+    }
+
+    .bg-text {
+      height: auto !important;
+      line-height: normal !important;
+    }
+
     .bag-icon {
       display: none;
     }
-
-    span {
-      font-size: inherit;
-      line-height: 36px;
-      padding: 0 6px;
-      color: rgba(255, 255, 255, 0.9);
-      cursor: pointer;
-
-      &:hover {
-        color: #fff;
-      }
-    }
   }
+}
+
+.new-silver-wallet {
+  background-color: var(--Ga1_u) !important;
+}
+
+.new-list-box * .num > span {
+  color: var(--text3) !important;
+}
+
+.click-root > .content-box {
+  color: #000 !important;
+  > .text {
+    color: #000 !important;
+  }
+}
+
+.new-list-box * .static-bg-root {
+  --static-bg-color: #ffecf1 !important;
+  --static-bg-border-color: #ff6699 !important;
 }

@@ -11,33 +11,24 @@
           :href="card.playUrl"
           target="_blank"
         >
-          <div class="cover-container">
+          <div class="subscriptions-cover-container">
             <DpiImage class="cover" :src="card.coverUrl" :size="64"></DpiImage>
           </div>
           <div class="card-info">
             <h1 class="title" :title="card.title">{{ card.title }}</h1>
             <div class="progress-row">
-              <div
-                v-if="card.status"
-                class="status"
-                :class="'status-' + card.status"
-              >{{ card.statusText }}</div>
+              <div v-if="card.status" class="status" :class="'status-' + card.status">
+                {{ card.statusText }}
+              </div>
               <div
                 v-if="card.progress"
                 class="progress"
                 :title="card.progress + ' | ' + card.latest"
-              >{{ card.progress }} | {{ card.latest }}</div>
-              <div
-                v-else
-                class="progress"
-                :title="card.latest"
-              >{{ card.latest }}</div>
-              <a
-                class="info"
-                :href="card.mediaUrl"
-                target="_blank"
-                title="详细信息"
               >
+                {{ card.progress }} | {{ card.latest }}
+              </div>
+              <div v-else class="progress" :title="card.latest">{{ card.latest }}</div>
+              <a class="info" :href="card.mediaUrl" target="_blank" title="详细信息">
                 <VIcon icon="mdi-information-outline" :size="16"></VIcon>
               </a>
             </div>
@@ -52,21 +43,11 @@
 <script lang="ts">
 import { getUID } from '@/core/utils'
 import { logError } from '@/core/utils/log'
-import {
-  DpiImage,
-  VLoading,
-  VEmpty,
-  VIcon,
-  ScrollTrigger,
-} from '@/ui'
+import { DpiImage, VLoading, VEmpty, VIcon, ScrollTrigger } from '@/ui'
 import { getJsonWithCredentials } from '@/core/ajax'
 import { SubscriptionTypes } from './subscriptions'
+import { SubscriptionItem, SubscriptionStatus, SubscriptionStatusFilter } from './types'
 
-enum SubscriptionStatus {
-  ToView = 1,
-  Viewing,
-  Viewed,
-}
 const getStatusText = (status: SubscriptionStatus) => {
   switch (status) {
     case SubscriptionStatus.ToView:
@@ -78,10 +59,7 @@ const getStatusText = (status: SubscriptionStatus) => {
       return '看过'
   }
 }
-const subscriptionSorter = (
-  a: { status: SubscriptionStatus },
-  b: { status: SubscriptionStatus },
-) => {
+const subscriptionSorter = (a: SubscriptionItem, b: SubscriptionItem) => {
   let statusA = a.status
   if (statusA !== SubscriptionStatus.Viewed) {
     statusA = SubscriptionStatus.Viewed - statusA
@@ -101,6 +79,10 @@ export default Vue.extend({
     ScrollTrigger,
   },
   props: {
+    filter: {
+      type: [Object, null],
+      default: null,
+    },
     type: {
       type: String,
       default: SubscriptionTypes.Bangumi,
@@ -114,40 +96,57 @@ export default Vue.extend({
       page: 1,
     }
   },
+  watch: {
+    filter() {
+      this.cards = []
+      this.loading = true
+      this.page = 1
+      this.nextPage()
+    },
+  },
   async created() {
     this.nextPage()
   },
   methods: {
     async nextPage() {
       try {
+        const filter = this.filter as SubscriptionStatusFilter
+        const followStatus = filter.viewAll ? 0 : (filter.status as number)
+        const params = new URLSearchParams({
+          type: this.type !== SubscriptionTypes.Bangumi ? '2' : '1',
+          pn: this.page,
+          ps: '16',
+          vmid: getUID(),
+          follow_status: followStatus.toString(),
+        })
         const json = await getJsonWithCredentials(
-          `https://api.bilibili.com/x/space/bangumi/follow/list?type=${
-            this.type !== SubscriptionTypes.Bangumi ? '2' : '1'
-          }&pn=${this.page}&ps=16&vmid=${getUID()}`,
+          `https://api.bilibili.com/x/space/bangumi/follow/list?${params}`,
         )
         if (json.code !== 0) {
           logError(`加载订阅信息失败: ${json.message}`)
           return
         }
-        const cards = lodash.uniqBy(
-          (this.cards as any[]).concat(
-            (lodash.get(json, 'data.list') as any[]).map(item => ({
-              title: item.title,
-              coverUrl: item.square_cover.replace('http:', 'https:'),
-              latest: item.new_ep.index_show,
-              progress: item.progress,
-              id: item.season_id,
-              status: item.follow_status,
-              statusText: getStatusText(item.follow_status),
-              playUrl: `https://www.bilibili.com/bangumi/play/ss${item.season_id}`,
-              mediaUrl: `https://www.bilibili.com/bangumi/media/md${item.media_id}`,
-            })),
-          ),
-          card => card.id,
-        ).sort(subscriptionSorter)
+        const newCards: SubscriptionItem[] = lodash
+          .uniqBy(
+            (lodash.get(json, 'data.list') as any[]).map(
+              (item): SubscriptionItem => ({
+                title: item.title,
+                coverUrl: item.square_cover.replace('http:', 'https:'),
+                latest: item.new_ep.index_show,
+                progress: item.progress,
+                id: item.season_id,
+                status: item.follow_status,
+                statusText: getStatusText(item.follow_status),
+                playUrl: `https://www.bilibili.com/bangumi/play/ss${item.season_id}`,
+                mediaUrl: `https://www.bilibili.com/bangumi/media/md${item.media_id}`,
+              }),
+            ),
+            card => card.id,
+          )
+          .sort(subscriptionSorter)
         this.page++
-        this.cards = cards
-        this.hasMorePage = lodash.get(json, 'data.total', 0) > this.cards.length
+        this.cards = this.cards.concat(newCards)
+        this.hasMorePage = this.cards.length < json.data.total
       } finally {
         this.loading = false
       }
@@ -157,7 +156,7 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-@import "common";
+@import 'common';
 
 .subscription-list {
   width: 100%;
@@ -187,7 +186,7 @@ export default Vue.extend({
         background-color: #2d2d2d;
         color: #eee;
       }
-      .cover-container {
+      .subscriptions-cover-container {
         height: 64px;
         width: 64px;
         border-radius: $radius 0 0 $radius;
@@ -246,7 +245,7 @@ export default Vue.extend({
       }
       .title {
         font-size: 14px;
-        font-weight: bold;
+        @include semi-bold();
         padding-top: 4px;
         color: inherit;
         white-space: nowrap;

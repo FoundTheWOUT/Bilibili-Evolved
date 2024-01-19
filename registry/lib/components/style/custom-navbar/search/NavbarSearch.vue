@@ -17,7 +17,7 @@ export default Vue.extend({
   // transparent mode / no fill
   .launch-bar {
     --color: var(--custom-navbar-foreground);
-    background-color: #000A;
+    background-color: #000a;
     opacity: 0.5;
     transition: opacity 0.2s ease-out;
     padding: 2px 6px;
@@ -29,6 +29,7 @@ export default Vue.extend({
     }
     .input-area .launch-bar-form .input {
       padding: 8px 6px;
+      width: var(--navbar-search-width);
     }
   }
 

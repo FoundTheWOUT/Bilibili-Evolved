@@ -1,12 +1,12 @@
 import { FeatureBase } from '@/components/types'
-import { parseExternalInput } from './external-input'
+import { loadFeatureCode } from './external-input'
 import { meta } from './meta'
 
 export enum CompareResult {
   Less = -1,
   Equal = 0,
   Greater = 1,
-  Incomparable = NaN
+  Incomparable = NaN,
 }
 export class Version {
   parts: number[]
@@ -51,7 +51,7 @@ export class Version {
 export const isFeatureAcceptable = async (feature: FeatureBase | string) => {
   try {
     if (typeof feature === 'string') {
-      feature = await parseExternalInput<FeatureBase>(feature)
+      feature = loadFeatureCode(feature) as FeatureBase
     }
     // 无效代码
     if (feature === null || feature === undefined) {

@@ -1,11 +1,11 @@
 <template>
   <MiniToast
     class="online-registry-item-wrapper"
-    placement="right"
+    :placement="placement"
     container="body"
     :delay="[200, 0]"
     :offset="[0, 12]"
-    :class="{ virtual }"
+    :class="{ virtual, hidden }"
   >
     <div v-if="!virtual" class="online-registry-item">
       <VIcon :size="18" :icon="icon" class="item-icon" />
@@ -40,19 +40,21 @@
       </div>
     </div>
     <template #toast>
-      <div v-if="description" class="online-registry-description" v-html="description"></div>
+      <ComponentDescription v-if="item.description" :component-data="item" />
     </template>
   </MiniToast>
 </template>
 <script lang="ts">
-import { getDescriptionHTML } from '@/components/description'
+import { DocSourceItem } from 'registry/lib/docs'
 import { cdnRoots } from '@/core/cdn-types'
 import { installFeature } from '@/core/install-feature'
 import { visibleInside } from '@/core/observer'
-import { getGeneralSettings, settings } from '@/core/settings'
+import { addComponentListener, getGeneralSettings, settings } from '@/core/settings'
 import { logError } from '@/core/utils/log'
 import { VIcon, VButton, MiniToast } from '@/ui'
-import { DocSourceItem } from 'registry/lib/docs'
+import ComponentDescription from '../../ComponentDescription.vue'
+import { SettingsPanelDockSide } from '../../dock'
+import { ItemFilter } from './item-filter'
 
 const getFeatureUrl = (item: DocSourceItem, branch: string) => {
   const cdnRootFn = cdnRoots[getGeneralSettings().cdnRoot]
@@ -86,12 +88,13 @@ const typeMappings = {
   pack: {
     icon: 'mdi-package-variant-closed',
     badge: '合集包',
-    getUrl: (pack: PackItem, branch: string) => pack.items.map(it => getFeatureUrl(it, branch)).join('\n'),
+    getUrl: (pack: PackItem, branch: string) =>
+      pack.items.map(it => getFeatureUrl(it, branch)).join('\n'),
     isInstalled: (pack: PackItem) => pack.items.every(isFeatureInstalled),
   },
 }
 export default Vue.extend({
-  components: { VIcon, VButton, MiniToast },
+  components: { VIcon, VButton, MiniToast, ComponentDescription },
   props: {
     item: {
       type: Object,
@@ -101,24 +104,49 @@ export default Vue.extend({
       type: String,
       required: true,
     },
+    itemFilter: {
+      type: String,
+      default: ItemFilter.All,
+    },
   },
   data() {
-    const {
-      icon, badge, getUrl, isInstalled,
-    } = typeMappings[this.item.type]
+    const { icon, badge, getUrl, isInstalled } = typeMappings[this.item.type]
     return {
       icon,
       badge,
       getUrl: (item: PackItem) => getUrl(item, this.branch),
       isInstalled,
-      description: getDescriptionHTML(this.item),
       installing: false,
       installed: false,
       virtual: false,
+      placement: 'right',
     }
+  },
+  computed: {
+    hidden() {
+      switch (this.itemFilter) {
+        case ItemFilter.All:
+        default: {
+          return false
+        }
+        case ItemFilter.Installed: {
+          return !this.installed
+        }
+        case ItemFilter.NotInstalled: {
+          return this.installed
+        }
+      }
+    },
   },
   created() {
     this.checkInstalled()
+    addComponentListener(
+      'settingsPanel.dockSide',
+      (value: SettingsPanelDockSide) => {
+        this.placement = value === SettingsPanelDockSide.Left ? 'right' : 'left'
+      },
+      true,
+    )
   },
   mounted() {
     const element = this.$el as HTMLElement
@@ -139,9 +167,7 @@ export default Vue.extend({
         .filter(it => it !== '')
       try {
         this.installing = true
-        await Promise.all(
-          urls.map(async url => installFeature(url)),
-        )
+        await Promise.all(urls.map(async url => installFeature(url)))
         this.checkInstalled()
         if (this.item.type === 'pack') {
           this.$emit('refresh')
@@ -162,10 +188,13 @@ export default Vue.extend({
 .online-registry-item-wrapper {
   min-height: 39px;
   position: relative;
+  &.hidden {
+    display: none;
+  }
   &::before {
-    content: "";
+    content: '';
     opacity: 0;
-    transition: opacity .2s ease-out;
+    transition: opacity 0.2s ease-out;
     position: absolute;
     pointer-events: none;
     top: 50%;
@@ -197,7 +226,7 @@ export default Vue.extend({
     font-size: 12px;
   }
   .item-display-name {
-    font-weight: bold;
+    @include semi-bold();
   }
   .grow {
     flex: 1 0 0;

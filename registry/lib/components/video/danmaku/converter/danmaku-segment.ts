@@ -273,26 +273,10 @@ export const proto = {
 }
 const decode = lodash.curry(async (type: string, blob: Blob) => {
   const buffer = new Uint8Array(
-    'arrayBuffer' in Blob.prototype ? await blob.arrayBuffer() : await new Response(blob).arrayBuffer(),
+    'arrayBuffer' in Blob.prototype
+      ? await blob.arrayBuffer()
+      : await new Response(blob).arrayBuffer(),
   )
-  // if (!window.protobufPromise) {
-  //   window.protobufPromise = new Promise((resolve, reject) => {
-  //     monkey({
-  //       url: 'https://cdn.jsdelivr.net/npm/protobufjs@6.10.1/dist/light/protobuf.min.js',
-  //       method: 'GET',
-  //     })
-  //       .catch(error => logError(error))
-  //       .then(library => {
-  //         if (!library) {
-  //           const message = '加载依赖库失败, 请稍后重试.'
-  //           Toast.error(message, toastTitle || '错误')
-  //           reject(message)
-  //         }
-  //         eval(library)
-  //         resolve(window.protobuf)
-  //       })
-  //   })
-  // }
   const protobuf = await protobufLibrary
   const root = protobuf.Root.fromJSON(proto)
   const reply = root.lookupType(type)
@@ -301,3 +285,34 @@ const decode = lodash.curry(async (type: string, blob: Blob) => {
 })
 export const decodeDanmakuSegment = decode('DmSegMobileReply')
 export const decodeDanmakuView = decode('DmWebViewReply')
+
+// 这里为了兼容 pakku, 只能用 fetch https://github.com/xmcp/pakku.js/issues/153
+const fetchBlob = async (url: string) => {
+  const response = await fetch(url, { mode: 'cors', credentials: 'include' })
+  return response.blob()
+}
+export const getDanmakuView = async (aid: string | number, cid: string | number) => {
+  const viewBlob = await fetchBlob(
+    `https://api.bilibili.com/x/v2/dm/web/view?type=1&oid=${cid}&pid=${aid}`,
+  )
+  if (!viewBlob) {
+    throw new Error('获取弹幕信息失败')
+  }
+  const view = await decodeDanmakuView(viewBlob)
+  return view
+}
+export const getDanmakuSegment = async (
+  aid: string | number,
+  cid: string | number,
+  index: number,
+) => {
+  const blob = await fetchBlob(
+    `https://api.bilibili.com/x/v2/dm/web/seg.so?type=1&oid=${cid}&pid=${aid}&segment_index=${
+      index + 1
+    }`,
+  )
+  if (!blob) {
+    throw new Error(`弹幕片段${index + 1}下载失败`)
+  }
+  return decodeDanmakuSegment(blob)
+}

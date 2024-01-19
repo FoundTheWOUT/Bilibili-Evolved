@@ -5,20 +5,11 @@ import { CdnTypes } from '@/core/cdn-types'
 import { addComponentListener } from '@/core/settings'
 import { DownloadPackageEmitMode } from '@/core/download-mode'
 import { ComponentEntry, componentsTags } from '../types'
-import {
-  defineComponentMetadata,
-  defineOptionsMetadata,
-  OptionsOfMetadata,
-} from '../define'
+import { defineComponentMetadata, defineOptionsMetadata, OptionsOfMetadata } from '../define'
 import { provideActions } from './external-actions'
-import description from './desc.md'
+import { SettingsPanelDockSide } from './dock'
 
 export const WidgetsPlugin = 'widgets'
-
-export enum SettingsPanelDockSide {
-  Left = '左侧',
-  Right = '右侧',
-}
 
 const options = defineOptionsMetadata({
   themeColor: {
@@ -42,7 +33,7 @@ const options = defineOptionsMetadata({
     dropdownEnum: TextColor,
   },
   cdnRoot: {
-    defaultValue: CdnTypes.jsDelivr,
+    defaultValue: CdnTypes.AltCdn,
     displayName: '更新源',
     dropdownEnum: CdnTypes,
   },
@@ -72,7 +63,7 @@ const options = defineOptionsMetadata({
 
 export type Options = OptionsOfMetadata<typeof options>
 
-const entry: ComponentEntry<typeof options> = async ({ metadata }) => {
+const entry: ComponentEntry<Options> = async ({ metadata }) => {
   const { isIframe } = await import('@/core/utils')
   if (isIframe()) {
     return
@@ -98,23 +89,9 @@ export const component = defineComponentMetadata({
   name: 'settingsPanel',
   displayName: '通用设置',
   configurable: false,
-  description,
   entry,
   options,
   tags: [componentsTags.general],
-  i18n: {
-    'en-US': {
-      map: [
-        ['通用设置', 'General'],
-        ['实验性', 'Experimental'],
-        ['通用', 'General'],
-        ['开发者模式', 'Dev mode'],
-        ['辅助颜色', 'Accent color'],
-        ['功能加载模式', 'Script loading mode'],
-        ['样式加载模式', 'Style loading mode'],
-      ],
-    },
-  },
   plugin: {
     displayName: '设置面板 - 功能扩展',
     setup: () => {

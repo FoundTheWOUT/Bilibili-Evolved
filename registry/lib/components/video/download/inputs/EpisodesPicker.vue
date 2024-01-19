@@ -1,9 +1,7 @@
 <template>
   <div class="episodes-picker download-video-config-section">
     <div class="episodes-picker-header">
-      <div class="episodes-picker-title">
-        选集:
-      </div>
+      <div class="episodes-picker-title">选集:</div>
       <div class="episodes-picker-checked-ratio">
         {{ checkedRatio }}
       </div>
@@ -35,6 +33,9 @@
       </div>
     </div>
     <div class="episodes-picker-items">
+      <div v-if="episodeItems.length === 0" class="episodes-picker-empty">
+        <VEmpty />
+      </div>
       <div v-for="(item, index) of episodeItems" :key="item.key" class="episodes-picker-item">
         <CheckBox
           v-model="item.isChecked"
@@ -56,11 +57,7 @@
   </div>
 </template>
 <script lang="ts">
-import {
-  VButton,
-  VIcon,
-  CheckBox,
-} from '@/ui'
+import { VButton, VIcon, CheckBox, VEmpty } from '@/ui'
 import { EpisodeItem } from './episode-item'
 
 export default Vue.extend({
@@ -68,6 +65,7 @@ export default Vue.extend({
     VButton,
     VIcon,
     CheckBox,
+    VEmpty,
   },
   props: {
     api: {
@@ -106,7 +104,7 @@ export default Vue.extend({
         return
       }
       if (e.shiftKey && this.lastCheckedEpisodeIndex !== -1) {
-        (this.episodeItems as EpisodeItem[])
+        ;(this.episodeItems as EpisodeItem[])
           .slice(
             Math.min(this.lastCheckedEpisodeIndex, index) + 1,
             Math.max(this.lastCheckedEpisodeIndex, index),
@@ -176,6 +174,11 @@ export default Vue.extend({
       flex: 1 1 0;
       opacity: 0.5;
     }
+  }
+  &-empty {
+    @include h-center();
+    justify-content: center;
+    padding: 4px 0;
   }
 }
 </style>

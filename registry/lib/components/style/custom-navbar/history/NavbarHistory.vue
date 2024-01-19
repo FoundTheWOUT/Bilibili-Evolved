@@ -6,11 +6,15 @@
           <TextBox v-model="search" placeholder="搜索" linear></TextBox>
         </div>
         <div class="operations">
-          <a
-            class="operation"
-            target="_blank"
-            href="https://www.bilibili.com/account/history"
-          >
+          <div class="operation" @click="toggleHistoryPause">
+            <VButton v-if="!paused" title="暂停记录历史" round>
+              <VIcon icon="mdi-pause" :size="14"></VIcon>
+            </VButton>
+            <VButton v-else title="继续记录历史" round>
+              <VIcon icon="mdi-play" :size="14"></VIcon>
+            </VButton>
+          </div>
+          <a class="operation" target="_blank" href="https://www.bilibili.com/account/history">
             <VButton title="查看更多" round>
               <VIcon icon="mdi-dots-horizontal" :size="18"></VIcon>
             </VButton>
@@ -18,20 +22,18 @@
         </div>
       </div>
       <div class="header-row">
-        <div class="row-title">
-          过滤:
-        </div>
+        <div class="row-title">过滤:</div>
         <div class="type-filters">
           <div v-for="t of types" :key="t.name" class="type-filter">
-            <VButton
-              round
+            <RadioButton
               :title="(t.checked ? '不显示' : '显示') + t.displayName"
               :class="{ checked: t.checked }"
-              @click="toggleTypeFilter(t)"
+              :checked="t.checked"
+              :disabled="loading"
+              @change="toggleTypeFilter(t)"
             >
-              <VIcon :icon="t.icon" :size="18"></VIcon>
               {{ t.displayName }}
-            </VButton>
+            </RadioButton>
           </div>
         </div>
       </div>
@@ -44,13 +46,9 @@
           <div class="time-group-name">
             {{ g.name }}
           </div>
-          <transition-group
-            name="time-group"
-            tag="div"
-            class="time-group-items"
-          >
+          <transition-group name="time-group" tag="div" class="time-group-items">
             <div v-for="h of g.items" :key="h.id" class="time-group-item">
-              <a class="cover-container" target="_blank" :href="h.url">
+              <a class="history-cover-container" target="_blank" :href="h.url">
                 <DpiImage
                   class="cover"
                   :src="h.cover"
@@ -62,26 +60,21 @@
                   class="progress"
                   :style="{ width: h.progress * 100 + '%' }"
                 ></div>
-                <div
-                  v-if="h.progressText"
-                  class="floating progress-number"
-                >{{ h.progress >= 1 ? '已看完' : h.progressText }}</div>
+                <div v-if="h.progressText" class="floating progress-number">
+                  {{ h.progress >= 1 ? '已看完' : h.progressText }}
+                </div>
                 <div
                   v-if="h.liveStatus !== undefined"
                   class="floating duration live-status"
                   :class="{ on: h.liveStatus === 1 }"
-                >{{ h.liveStatus === 1 ? '直播中': '未开播' }}</div>
-                <div
-                  v-if="h.durationText"
-                  class="floating duration"
-                >{{ h.durationText }}</div>
+                >
+                  {{ h.liveStatus === 1 ? '直播中' : '未开播' }}
+                </div>
+                <div v-if="h.durationText" class="floating duration">{{ h.durationText }}</div>
               </a>
-              <a
-                class="title"
-                target="_blank"
-                :href="h.url"
-                :title="h.title"
-              >{{ h.title || h.upName + '的直播间' }}</a>
+              <a class="title" target="_blank" :href="h.url" :title="h.title">{{
+                h.title || h.upName + '的直播间'
+              }}</a>
               <a
                 class="up"
                 target="_blank"
@@ -96,11 +89,7 @@
                 ></DpiImage>
                 <div class="up-name">{{ h.upName }}</div>
               </a>
-              <div
-                v-if="h.timeText"
-                class="time"
-                :title="new Date(h.viewAt).toLocaleString()"
-              >
+              <div v-if="h.timeText" class="time" :title="new Date(h.viewAt).toLocaleString()">
                 {{ h.timeText }}
               </div>
             </div>
@@ -116,10 +105,13 @@
   </div>
 </template>
 <script lang="ts">
+import { bilibiliApi, getJsonWithCredentials, postTextWithCredentials } from '@/core/ajax'
+import { getCsrf } from '@/core/utils'
 import { descendingSort } from '@/core/utils/sort'
 import {
   VButton,
   VIcon,
+  RadioButton,
   TextBox,
   VLoading,
   VEmpty,
@@ -128,13 +120,19 @@ import {
 } from '@/ui'
 import { popperMixin } from '../mixins'
 import {
-  types, TypeFilter, HistoryItem, getHistoryItems, group,
+  navbarFilterTypes,
+  TypeFilter,
+  HistoryItem,
+  getHistoryItems,
+  group,
+  HistoryType,
 } from './types'
 
 export default Vue.extend({
   components: {
     VButton,
     VIcon,
+    RadioButton,
     TextBox,
     VLoading,
     VEmpty,
@@ -144,49 +142,57 @@ export default Vue.extend({
   mixins: [popperMixin],
   data() {
     return {
-      types,
+      types: navbarFilterTypes,
       search: '',
       viewTime: 0,
       cards: [],
       groups: [],
       loading: true,
       hasMorePage: true,
+      paused: false,
     }
   },
   computed: {
     canNextPage() {
-      return (
-        this.search === ''
-        && !this.loading
-        && this.hasMorePage
-        && this.types.every((t: TypeFilter) => t.checked)
-      )
+      return this.search === '' && !this.loading && this.hasMorePage
     },
   },
   watch: {
     search: lodash.debounce(function search() {
-      this.updateGroups()
+      this.reloadHistoryItems()
     }, 200),
   },
   async created() {
     try {
-      await this.nextPage()
+      await Promise.all([this.nextPage(), this.updateHistoryPauseState()])
     } finally {
       this.loading = false
     }
   },
   methods: {
     toggleTypeFilter(typeFilter: TypeFilter) {
-      typeFilter.checked = !typeFilter.checked
-      this.updateGroups()
+      navbarFilterTypes.forEach(t => (t.checked = t.name === typeFilter.name))
+      this.reloadHistoryItems()
+    },
+    async reloadHistoryItems() {
+      this.cards = []
+      this.viewTime = 0
+      this.hasMorePage = true
+      this.loading = true
+      try {
+        await this.nextPage()
+      } finally {
+        this.loading = false
+      }
     },
     filterFunc(item: HistoryItem) {
-      if (types.some(t => t.name === item.type && !t.checked)) {
+      const isAllType = navbarFilterTypes.find(it => it.name === HistoryType.All).checked
+      if (!isAllType && navbarFilterTypes.some(t => t.name === item.type && !t.checked)) {
         return false
       }
       if (
-        !item.title.toLowerCase().includes(this.search.toLowerCase())
-        && !item.upName.toLowerCase().includes(this.search.toLowerCase())
+        !item.title.toLowerCase().includes(this.search.toLowerCase()) &&
+        !item.upName.toLowerCase().includes(this.search.toLowerCase())
       ) {
         return false
       }
@@ -196,11 +202,12 @@ export default Vue.extend({
       this.groups = group(this.cards.filter(this.filterFunc))
     },
     async nextPage() {
-      const items = await getHistoryItems(this.viewTime)
+      const items = await getHistoryItems(
+        this.viewTime,
+        navbarFilterTypes.find(t => t.checked),
+      )
       const cards: HistoryItem[] = lodash.uniqBy(
-        this.cards
-          .concat(items)
-          .sort(descendingSort((item: HistoryItem) => item.viewAt)),
+        this.cards.concat(items).sort(descendingSort((item: HistoryItem) => item.viewAt)),
         item => item.id,
       )
       this.cards = cards
@@ -208,17 +215,45 @@ export default Vue.extend({
       if (cards.length > 0) {
         this.viewTime = lodash.last(cards).viewAt
       }
-      this.hasMorePage = cards.length !== 0
+      this.hasMorePage = items.length !== 0
+      if (this.hasMorePage && this.groups.length === 0) {
+        await this.nextPage()
+      }
+    },
+    async updateHistoryPauseState() {
+      const result = await bilibiliApi(
+        getJsonWithCredentials('https://api.bilibili.com/x/v2/history/shadow'),
+      )
+      /*
+        result == true: 暂停
+        result == {}: 没暂停
+      */
+      this.paused = result === true
+    },
+    async toggleHistoryPause() {
+      const targetState = !this.paused
+      try {
+        this.paused = targetState
+        await postTextWithCredentials(
+          'https://api.bilibili.com/x/v2/history/shadow/set',
+          new URLSearchParams({
+            csrf: getCsrf(),
+            switch: targetState.toString(),
+          }).toString(),
+        )
+      } catch (error) {
+        this.paused = !targetState
+      }
     },
   },
 })
 </script>
 <style lang="scss">
-@import "common";
-@import "../popup";
+@import 'common';
+@import '../popup';
 
 .custom-navbar-history-list {
-  width: 350px;
+  width: 400px;
   @include navbar-popup-height();
   font-size: 12px;
   padding: 0;
@@ -236,8 +271,9 @@ export default Vue.extend({
       position: absolute;
     }
   }
-  @mixin round-button($width: 26px) {
-    width: $width;
+  @mixin round-button($size: 26px) {
+    width: $size;
+    height: $size;
     box-sizing: border-box;
   }
   .header {
@@ -245,23 +281,22 @@ export default Vue.extend({
     margin: 16px 12px 4px 12px;
     .header-row {
       @include h-stretch(8px);
-      justify-content: space-between;
       .row-title {
         @include h-center();
       }
     }
     .type-filters {
-      @include h-center(8px);
+      @include h-center(6px);
       .type-filter {
         .be-button {
           padding: 4px 8px 4px 6px;
-          color: #8888;
-          .be-icon {
-            margin-right: 6px;
-          }
-          &.checked {
-            color: inherit;
-          }
+          // color: #8888;
+          // .be-icon {
+          //   margin-right: 6px;
+          // }
+          // &.checked {
+          //   color: inherit;
+          // }
         }
       }
     }
@@ -354,7 +389,7 @@ export default Vue.extend({
                 opacity: 1;
               }
             }
-            .cover-container {
+            .history-cover-container {
               $height: 55px;
               $padding: 2px;
               grid-area: cover;
@@ -396,8 +431,8 @@ export default Vue.extend({
               }
             }
             .title {
+              @include semi-bold();
               grid-area: title;
-              font-weight: bold;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;

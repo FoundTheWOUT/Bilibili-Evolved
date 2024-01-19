@@ -1,4 +1,4 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 
 const id = 'fixed-sidebars-style'
 const entry = async () => {
@@ -6,7 +6,7 @@ const entry = async () => {
   disableProfilePopup()
 }
 
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: 'fixedFeedsSidebars',
   instantStyles: [
     {
@@ -19,11 +19,7 @@ export const component: ComponentMetadata = {
   description: {
     'zh-CN': '强制固定动态主页的顶栏和所有侧栏.',
   },
-  tags: [
-    componentsTags.feeds,
-  ],
+  tags: [componentsTags.feeds],
   entry,
-  urlInclude: [
-    /^https:\/\/t\.bilibili\.com\/$/,
-  ],
-}
+  urlInclude: [/^https:\/\/t\.bilibili\.com\/$/],
+})

@@ -3,14 +3,22 @@
     <slot />
   </div>
 </template>
-<script lang="ts">
-export default Vue.extend({
-
-})
+<script setup lang="ts">
+const params = new URLSearchParams(location.search)
+if (params.has('bvid')) {
+  const restParams = new URLSearchParams([...params.entries()].filter(([name]) => name !== 'bvid'))
+  location.replace(
+    `/video/${params.get('bvid')}${restParams.size > 0 ? `?${restParams.toString()}` : ''}`,
+  )
+}
 </script>
 <style lang="scss">
-@import "common";
+@import 'common';
 
+html {
+  scroll-behavior: smooth;
+  min-height: 100vh;
+}
 body {
   @include v-stretch();
   min-height: 100vh;
@@ -43,8 +51,5 @@ body {
   body.home-redesign-off & {
     display: none;
   }
-}
-html {
-  scroll-behavior: smooth;
 }
 </style>

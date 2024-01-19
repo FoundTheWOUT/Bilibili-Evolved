@@ -1,36 +1,40 @@
 import { playerAgent } from '@/components/video/player-agent'
 import { getComponentSettings } from '@/core/settings'
 import { registerAndGetData } from '@/plugins/data'
+import { Options } from '.'
 import { KeyBindingAction, KeyBindingActionContext } from './bindings'
+import { simulateClick } from '@/core/utils'
 
-export const clickElement = (
-  target: string | HTMLElement,
-  context: KeyBindingActionContext,
-) => {
-  const { event } = context
-  const mouseEvent = new MouseEvent('click', {
+export const keyboardEventToPointer = (event: KeyboardEvent): PointerEventInit => {
+  return {
     ...lodash.pick(event, 'ctrlKey', 'shiftKey', 'altKey', 'metaKey'),
-  })
+    bubbles: true,
+    cancelable: true,
+    view: unsafeWindow,
+  }
+}
+export const clickElement = (target: string | HTMLElement, context: KeyBindingActionContext) => {
+  const { event } = context
+  const eventParams = keyboardEventToPointer(event)
   if (typeof target === 'string') {
     const targetElement = dq(target) as HTMLElement
     if (!targetElement) {
       return false
     }
-    targetElement.dispatchEvent(mouseEvent)
+    simulateClick(targetElement, eventParams)
   } else {
     if (!target) {
       return false
     }
-    target.dispatchEvent(mouseEvent)
+    simulateClick(target, eventParams)
   }
   return true
 }
-export const useClickElement = (target: string | HTMLElement) => (
-  (context: KeyBindingActionContext) => clickElement(target, context)
-)
-export const changeVideoTime = (delta: number | (() => number)) => () => (
+export const useClickElement =
+  (target: string | HTMLElement) => (context: KeyBindingActionContext) =>
+    clickElement(target, context)
+export const changeVideoTime = (delta: number | (() => number)) => () =>
   playerAgent.changeTime(typeof delta === 'number' ? delta : delta())
-)
 /** 提示框用的`setTimeout`句柄 */
 let tipTimeoutHandle: number
 /**
@@ -41,16 +45,19 @@ let tipTimeoutHandle: number
 export const showTip = async (text: string, icon: string) => {
   let tip = dq('.keymap-tip') as HTMLDivElement
   if (!tip) {
-    const player = await playerAgent.query.playerArea() as HTMLElement
+    const player = (await playerAgent.query.playerArea()) as HTMLElement
     if (!player) {
       return
     }
-    player.insertAdjacentHTML('afterbegin', /* html */`
+    player.insertAdjacentHTML(
+      'afterbegin',
+      /* html */ `
       <div class="keymap-tip-container">
         <i class="keymap-tip-icon mdi ${icon}"></i>
         <div class="keymap-tip">${text}</div>
       </div>
-    `)
+    `,
+    )
     tip = dq('.keymap-tip') as HTMLDivElement
   }
   tip.innerHTML = text
@@ -82,7 +89,8 @@ export const builtInActions: Record<string, KeyBindingAction> = {
   volumeUp: {
     displayName: '增加音量',
     run: () => {
-      const volume = playerAgent.changeVolume(10)
+      const step = getComponentSettings<Options>('keymap').options.volumeStep
+      const volume = playerAgent.changeVolume(step)
       if (lodash.isNil(volume)) {
         return volume
       }
@@ -93,7 +101,8 @@ export const builtInActions: Record<string, KeyBindingAction> = {
   volumeDown: {
     displayName: '降低音量',
     run: () => {
-      const volume = playerAgent.changeVolume(-10)
+      const step = getComponentSettings<Options>('keymap').options.volumeStep
+      const volume = playerAgent.changeVolume(-step)
       if (lodash.isNil(volume)) {
         return volume
       }
@@ -126,11 +135,15 @@ export const builtInActions: Record<string, KeyBindingAction> = {
   },
   coin: {
     displayName: '投币',
-    run: useClickElement('.video-toolbar .coin,.tool-bar .coin-info, .video-toolbar-module .coin-box, .play-options-ul > li:nth-child(2)'),
+    run: useClickElement(
+      '.video-toolbar .coin, .tool-bar .coin-info, .video-toolbar-module .coin-box, .play-options-ul > li:nth-child(2), .video-toolbar-v1 .coin, .toolbar .coin',
+    ),
   },
   favorite: {
     displayName: '收藏',
-    run: useClickElement('.video-toolbar .collect, .video-toolbar-module .fav-box, .play-options-ul > li:nth-child(3)'),
+    run: useClickElement(
+      '.video-toolbar .collect, .video-toolbar-module .fav-box, .play-options-ul > li:nth-child(3), .video-toolbar-v1 .collect',
+    ),
   },
   pause: {
     displayName: '暂停/播放',
@@ -139,31 +152,38 @@ export const builtInActions: Record<string, KeyBindingAction> = {
   like: {
     displayName: '点赞',
     run: (() => {
-      /** 长按`L`三连使用的记忆变量 */
+      /** 长按 `L` 三连使用的记忆变量 */
       let likeClick = true
-      return ((context: KeyBindingActionContext) => {
+      return (context: KeyBindingActionContext) => {
         const { event } = context
-        const likeButton = dq('.video-toolbar .like, .tool-bar .like-info') as HTMLSpanElement
+        const likeButton = dq(
+          '.video-toolbar .like, .tool-bar .like-info, .video-toolbar-v1 .like, .toolbar .like',
+        ) as HTMLSpanElement
         if (!likeButton) {
           return false
         }
         event.preventDefault()
-        const fireEvent = (name: string, args: Event) => {
-          const customEvent = new CustomEvent(name, args)
-          likeButton.dispatchEvent(customEvent)
+        const fireMouseEvent = (name: string, source: KeyboardEvent) => {
+          const eventParams: MouseEventInit = keyboardEventToPointer(source)
+          const mouseEvent = new MouseEvent(name, eventParams)
+          likeButton.dispatchEvent(mouseEvent)
         }
         likeClick = true
         setTimeout(() => (likeClick = false), 200)
-        fireEvent('mousedown', event)
-        document.body.addEventListener('keyup', e => {
-          e.preventDefault()
-          fireEvent('mouseup', e)
-          if (likeClick) {
-            fireEvent('click', e)
-          }
-        }, { once: true })
+        fireMouseEvent('mousedown', event)
+        document.body.addEventListener(
+          'keyup',
+          e => {
+            e.preventDefault()
+            fireMouseEvent('mouseup', e)
+            if (likeClick) {
+              fireMouseEvent('click', e)
+            }
+          },
+          { once: true },
+        )
         return true
-      })
+      }
     })(),
   },
   danmaku: {
@@ -172,11 +192,13 @@ export const builtInActions: Record<string, KeyBindingAction> = {
   },
   longJumpBackward: {
     displayName: '长倒退',
-    run: () => playerAgent.changeTime(-(getComponentSettings('keymap').options.longJumpSeconds)),
+    run: () =>
+      playerAgent.changeTime(-getComponentSettings<Options>('keymap').options.longJumpSeconds),
   },
   longJumpForward: {
     displayName: '长前进',
-    run: () => playerAgent.changeTime(getComponentSettings('keymap').options.longJumpSeconds),
+    run: () =>
+      playerAgent.changeTime(getComponentSettings<Options>('keymap').options.longJumpSeconds),
   },
   jumpBackward: {
     displayName: '倒退',
@@ -196,15 +218,17 @@ export const builtInActions: Record<string, KeyBindingAction> = {
         return null
       }
       const rect = player.getBoundingClientRect()
-      player.dispatchEvent(new MouseEvent('contextmenu', {
-        bubbles: true,
-        cancelable: false,
-        view: unsafeWindow,
-        button: 2,
-        buttons: 0,
-        clientX: rect.x + rect.width / 2 - 176.65 / 2,
-        clientY: rect.y + rect.height / 2 - 194 / 2,
-      }))
+      player.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: false,
+          view: unsafeWindow,
+          button: 2,
+          buttons: 0,
+          clientX: rect.x + rect.width / 2 - 176.65 / 2,
+          clientY: rect.y + rect.height / 2 - 194 / 2,
+        }),
+      )
       return true
     },
   },
@@ -216,7 +240,12 @@ export const builtInActions: Record<string, KeyBindingAction> = {
     displayName: '发送评论',
     ignoreTyping: false,
     run: () => {
-      const sendButton = document.activeElement?.nextElementSibling as HTMLButtonElement
+      const { activeElement } = document
+      if (!activeElement || !(activeElement instanceof HTMLTextAreaElement)) {
+        return null
+      }
+      const sendButton = (activeElement.nextElementSibling ??
+        activeElement.parentElement.nextElementSibling) as HTMLButtonElement
       if (!sendButton) {
         return null
       }

@@ -4,7 +4,7 @@
       {{ row.displayName }}
     </div>
     <div
-      class="row-default-binding"
+      class="row-default-binding row-binding"
       :class="{
         overwritten: isOverwrittern(presets[selectedPreset], customKeyBindings),
         'not-set': presetBase[row.name] === undefined,
@@ -13,7 +13,7 @@
       {{ showReadonlyKey(presetBase) }}
     </div>
     <div
-      class="row-preset-binding"
+      class="row-preset-binding row-binding"
       :class="{
         overwritten: isOverwrittern(customKeyBindings),
         'not-set': presets[selectedPreset][row.name] === undefined,
@@ -21,7 +21,7 @@
     >
       {{ showReadonlyKey(presets[selectedPreset]) }}
     </div>
-    <div class="row-custom-binding">
+    <div class="row-custom-binding row-binding">
       <div v-if="editable" class="custom-binding-edit">
         <TextBox
           ref="customBindingTextBox"
@@ -43,11 +43,7 @@
   </div>
 </template>
 <script lang="ts">
-import {
-  TextBox,
-  VButton,
-  VIcon,
-} from '@/ui'
+import { TextBox, VButton, VIcon } from '@/ui'
 import { getComponentSettings } from '@/core/settings'
 import { presetBase, presets } from '../presets'
 
@@ -119,7 +115,7 @@ export default Vue.extend({
 })
 </script>
 <style lang="scss">
-@import "common";
+@import 'common';
 
 .keymap-settings-grid .grid-row {
   padding: 2px 0;
@@ -130,7 +126,13 @@ export default Vue.extend({
     @include no-scrollbar();
     &.not-set,
     &.overwritten {
-      opacity: .25;
+      opacity: 0.25;
+    }
+  }
+  .row-binding {
+    &,
+    & input {
+      font-family: monospace, sans-serif;
     }
   }
   .row-custom-binding {

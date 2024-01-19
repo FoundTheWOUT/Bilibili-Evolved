@@ -1,6 +1,18 @@
 import { getData, registerAndGetData } from '@/plugins/data'
 
-export const trimLeadingDot = (selector: string) => selector.replace(/^\./, '')
+export const trimLeadingDot = (selector: string) =>
+  selector
+    .split(',')
+    .map(cls => cls.trim().replace(/^\./, ''))
+    .join(',')
+export const splitToSpace = (selector: string) => selector.split(',').join(' ')
+export const convertToXPath = (selector: string, join = 'or') =>
+  selector
+    .split(',')
+    .map(trimLeadingDot)
+    .flat()
+    .map(part => `contains(@class, "${part}")`)
+    .join(` ${join} `)
 
 export const useShare = <T>(
   key: string,
@@ -21,10 +33,7 @@ export const useShare = <T>(
     return [defaultValue, setShareValue]
   }
 
-  return [
-    undefined,
-    setShareValue,
-  ]
+  return [undefined, setShareValue]
 }
 
 export const formatSpeedText = (speed: number, nameBtnStyle = false) => {

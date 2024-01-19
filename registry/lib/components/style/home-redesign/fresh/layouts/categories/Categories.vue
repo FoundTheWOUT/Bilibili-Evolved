@@ -1,9 +1,7 @@
 <template>
   <div class="fresh-home-categories">
     <div class="fresh-home-header">
-      <div class="fresh-home-header-title">
-        分区
-      </div>
+      <div class="fresh-home-header-title">分区</div>
       <div class="fresh-home-header-center-area">
         <div class="fresh-home-header-tabs">
           <div ref="tabs" class="default-tabs">
@@ -41,7 +39,7 @@ import { ArrayContent } from '@/core/common-types'
 import { Reorder } from '@/core/reorder'
 import { ascendingSort } from '@/core/utils/sort'
 import { VButton, VIcon } from '@/ui'
-import { freshHomeOptions } from '../../types'
+import { freshHomeOptions } from '../../options'
 import { supportedCategories } from './filter'
 import { getContent } from './content/content'
 
@@ -105,7 +103,7 @@ export default Vue.extend({
 })
 </script>
 <style lang="scss">
-@import "common";
+@import 'common';
 
 .fresh-home-categories {
   @include v-stretch();

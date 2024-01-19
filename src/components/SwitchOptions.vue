@@ -1,10 +1,7 @@
 <template>
-  <div class="switch-options" :class="{ 'small-size': smallSize, 'grid': !popupMode }">
+  <div class="switch-options" :class="{ 'small-size': smallSize, grid: !popupMode }">
     <template v-if="popupMode">
-      <VButton
-        ref="button"
-        @click="popupOpen = !popupOpen"
-      >
+      <VButton ref="button" @click="popupOpen = !popupOpen">
         <VIcon
           class="switch-icon"
           icon="mdi-checkbox-marked-circle-outline"
@@ -24,7 +21,7 @@
           v-for="name of Object.keys(options.switches)"
           :key="name"
           :class="{ dim: isDim(name) }"
-          v-bind="options.switchProps || {}"
+          v-bind="mergedSwitchProps"
           :checked="componentOptions[`switch-${name}`]"
           @change="componentOptions[`switch-${name}`] = $event"
         >
@@ -39,7 +36,7 @@
           v-for="name of Object.keys(options.switches)"
           :key="name"
           :class="{ dim: isDim(name) }"
-          v-bind="options.switchProps || {}"
+          v-bind="mergedSwitchProps"
           :checked="componentOptions[`switch-${name}`]"
           @change="componentOptions[`switch-${name}`] = $event"
         >
@@ -51,9 +48,7 @@
 </template>
 
 <script lang="ts">
-import {
-  VPopup, VButton, VIcon, CheckBox, RadioButton,
-} from '@/ui'
+import { VPopup, VButton, VIcon, CheckBox, RadioButton } from '@/ui'
 import { getComponentSettings } from '../core/settings'
 
 export default Vue.extend({
@@ -87,6 +82,15 @@ export default Vue.extend({
       componentOptions,
     }
   },
+  computed: {
+    mergedSwitchProps() {
+      return {
+        checkedIcon: 'mdi-eye-off-outline',
+        notCheckedIcon: 'mdi-eye-outline',
+        ...this.options.switchProps,
+      }
+    },
+  },
   watch: {
     options() {
       this.updateColumnsCount()
@@ -102,7 +106,13 @@ export default Vue.extend({
       element.style.setProperty('--columns', columns.toString())
     },
     isDim(name: string) {
-      return (this.componentOptions[`switch-${name}`] && this.options.dimAt === 'checked') || this.options.dimAt === 'notChecked'
+      if (this.options.dimAt === 'checked' || this.options.dimAt === undefined) {
+        return this.componentOptions[`switch-${name}`]
+      }
+      if (this.options.dimAt === 'notChecked') {
+        return !this.componentOptions[`switch-${name}`]
+      }
+      return false
     },
   },
 })
@@ -121,7 +131,7 @@ export default Vue.extend({
     transform: scale(0.9);
   }
   .dim {
-    opacity: .5;
+    opacity: 0.5;
   }
   &-grid {
     font-size: 12px;

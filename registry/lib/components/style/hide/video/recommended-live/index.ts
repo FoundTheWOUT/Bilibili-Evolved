@@ -1,7 +1,7 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { videoUrls } from '@/core/utils/urls'
 
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: 'hideRecommendedLive',
   entry: none,
   instantStyles: [
@@ -11,12 +11,9 @@ export const component: ComponentMetadata = {
     },
   ],
   displayName: '隐藏直播推荐',
-  tags: [
-    componentsTags.style,
-    componentsTags.video,
-  ],
+  tags: [componentsTags.style, componentsTags.video],
   description: {
     'zh-CN': '隐藏视频页面右侧下方的直播推荐.',
   },
   urlInclude: videoUrls,
-}
+})

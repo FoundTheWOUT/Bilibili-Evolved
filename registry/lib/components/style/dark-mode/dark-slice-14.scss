@@ -111,6 +111,14 @@
           span:not(.cur-page) {
             @include color("e");
           }
+          .cur-page {
+            @include color('a');
+          }
+        }
+        &-right {
+          .next-button {
+            @include color('a');
+          }
         }
         &-title {
           @include color("e");
@@ -121,6 +129,11 @@
       }
     }
     &_second-line {
+      .second-line_left {
+        .abstract {
+          @include color('a');
+        }
+      }
       .second-line_right {
         @include theme-border-color();
         @include background-color("4");
@@ -156,8 +169,13 @@
             &-title {
               @include color("e");
             }
+            &-duration {
+              @include color('a');
+            }
+            &-playing,
             &-title-playing {
               @include theme-color();
+              @include background-color();
               .cur-play-icon {
                 @include to-theme("blue");
               }
@@ -303,10 +321,16 @@ a {
     @include theme-color();
   }
 }
-.follow-btn.followed {
-  @include border-color("");
-  @include background-color("4");
-  @include color("a");
+.follow-btn {
+  &.following,
+  &.followed {
+    @include border-color("");
+    @include background-color("4");
+    @include color("a");
+    path {
+      @include fill('a');
+    }
+  }
 }
 #article-list-index .index-holder {
   .article-item:not(.on) {
@@ -325,6 +349,9 @@ a {
 }
 .main-container .bottom-brief-introduction {
   @include background-color("2");
+}
+.main-container {
+  @include background-color();
 }
 .fullscreen-loading .tv-bg + .container {
   @include background-color();
@@ -638,13 +665,13 @@ body:not(.simplify-comment) .panel-area .bb-comment {
         }
       }
       [class*='color-'][class*='-03'] {
-        @include brightness(6 / 5);
+        @include brightness(calc(6 / 5));
         // > * {
         //   @include brightness(5 / 6);
         // }
       }
       [class*='color-'][class*='-04'] {
-        @include brightness(4 / 3);
+        @include brightness(calc(4 / 3));
         // > * {
         //   @include brightness(3 / 4);
         // }
@@ -748,7 +775,7 @@ body:not(.simplify-comment) .panel-area .bb-comment {
   }
 }
 .z-top-container {
-  @include background-color("3");
+  @include background-color("2");
 }
 .coin-dialog-wrapper {
   @include background-color("2");

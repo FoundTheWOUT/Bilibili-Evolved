@@ -1,10 +1,9 @@
 <template>
-  <div class="component-description" v-html="description(componentData)"></div>
+  <div class="component-description" v-html="html"></div>
 </template>
 
 <script lang="ts">
 import { getComponentSettings } from '@/core/settings'
-import { ComponentMetadata } from '../component'
 import { getDescriptionHTML } from '../description'
 
 export default Vue.extend({
@@ -17,19 +16,18 @@ export default Vue.extend({
   data() {
     return {
       settings: getComponentSettings(this.componentData),
+      html: '',
     }
   },
-  methods: {
-    description(component: ComponentMetadata) {
-      return getDescriptionHTML(component)
-    },
+  async created() {
+    this.html = await getDescriptionHTML(this.componentData)
   },
 })
 </script>
 
 <style lang="scss">
-@import "common";
-@import "markdown";
+@import 'common';
+@import 'markdown';
 
 .component-description {
   word-break: break-all;

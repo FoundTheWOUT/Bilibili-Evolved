@@ -34,15 +34,17 @@ export const pluginsMap: { [name: string]: PluginMetadata } = {}
 const getBuiltInPlugins = lodash.once(() => {
   const context = require.context('@/plugins', true, /index\.ts$/)
   const pluginPaths = context.keys()
-  return pluginPaths.map(path => {
-    const m = context(path)
-    if ('plugin' in m) {
-      const plugin = m.plugin as PluginMetadata
-      pluginsMap[plugin.name] = plugin
-      return plugin
-    }
-    return undefined
-  }).filter(it => it !== undefined) as PluginMetadata[]
+  return pluginPaths
+    .map(path => {
+      const m = context(path)
+      if ('plugin' in m) {
+        const plugin = m.plugin as PluginMetadata
+        pluginsMap[plugin.name] = plugin
+        return plugin
+      }
+      return undefined
+    })
+    .filter(it => it !== undefined) as PluginMetadata[]
 })
 /** 包含所有插件的数组 */
 export const plugins: PluginMetadata[] = getBuiltInPlugins()
@@ -52,10 +54,12 @@ export const plugins: PluginMetadata[] = getBuiltInPlugins()
  * @param code 插件代码
  */
 export const installPlugin = async (code: string) => {
-  const { parseExternalInput } = await import('../core/external-input')
-  const plugin = await parseExternalInput<PluginMetadata>(code)
-  if (plugin === null) {
-    throw new Error('无效的插件代码')
+  const { loadFeatureCode } = await import('@/core/external-input')
+  let plugin: PluginMetadata
+  try {
+    plugin = loadFeatureCode(code) as PluginMetadata
+  } catch (e) {
+    throw new Error('无效的插件代码', e)
   }
   const { settings } = await import('@/core/settings')
   const existingPlugin = settings.userPlugins[plugin.name]
@@ -97,9 +101,7 @@ export const installPlugin = async (code: string) => {
 export const uninstallPlugin = async (nameOrDisplayName: string) => {
   const { settings } = await import('@/core/settings')
   const existingPlugin = Object.entries(settings.userPlugins).find(
-    ([name, { displayName }]) => (
-      name === nameOrDisplayName || displayName === nameOrDisplayName
-    ),
+    ([name, { displayName }]) => name === nameOrDisplayName || displayName === nameOrDisplayName,
   )
   if (!existingPlugin) {
     throw new Error(`没有找到与名称'${nameOrDisplayName}'相关联的插件`)
@@ -154,33 +156,31 @@ export const loadPlugin = async (plugin: PluginMetadata) => {
  * @param components 组件列表
  */
 export const loadAllPlugins = async (components: ComponentMetadata[]) => {
-  const {
-    settings,
-    getGeneralSettings,
-  } = await import('@/core/settings')
-  const {
-    loadFeaturesFromCodes,
-    FeatureKind,
-  } = await import('@/core/external-input/load-features-from-codes')
-  const otherPlugins = lodash(components)
-    .map(extractPluginFromComponent)
-    .filter(p => p !== null)
-    .map(p => p as PluginMetadata)
-    .concat(await loadFeaturesFromCodes(
-      FeatureKind.Plugin,
-      Object.keys(settings.userPlugins),
-      Object.values(settings.userPlugins).map(p => p.code),
-    ))
-    .value()
-  plugins.push(...otherPlugins)
-  return Promise.allSettled(
-    plugins.map(loadPlugin),
-  ).then(async () => {
+  const { settings, getGeneralSettings } = await import('@/core/settings')
+  const { loadFeatureCode } = await import('@/core/external-input/load-feature-code')
+  for (const component of components) {
+    const plugin = extractPluginFromComponent(component)
+    if (plugin) {
+      plugins.push(plugin)
+    }
+  }
+  for (const [name, setting] of Object.entries(settings.userPlugins)) {
+    const { code } = setting
+    let metadata: PluginMetadata
+    try {
+      metadata = loadFeatureCode(code) as PluginMetadata
+    } catch (e) {
+      console.error('从代码加载用户插件失败。代码可能包含语法错误或执行时产生了异常', {
+        pluginName: name,
+        error: e,
+      })
+      continue
+    }
+    plugins.push(metadata)
+  }
+  return Promise.allSettled(plugins.map(loadPlugin)).then(async () => {
     if (getGeneralSettings().devMode) {
-      const {
-        pluginLoadTime,
-        pluginResolveTime,
-      } = await import('@/core/performance/plugin-trace')
+      const { pluginLoadTime, pluginResolveTime } = await import('@/core/performance/plugin-trace')
       const { logStats } = await import('@/core/performance/stats')
       logStats('plugins block', pluginLoadTime)
       logStats('plugins resolve', pluginResolveTime)

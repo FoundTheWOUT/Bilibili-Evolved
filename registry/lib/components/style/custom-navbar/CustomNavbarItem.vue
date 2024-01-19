@@ -4,7 +4,7 @@
     class="custom-navbar-item"
     role="listitem"
     :data-name="item.name"
-    :class="{ disabled: item.disabled, active: item.active }"
+    :class="{ disabled: item.disabled, active: item.active, 'input-within': inputWithin }"
     :style="{ flex: item.flexStyle, order: item.order }"
   >
     <CustomNavbarLink
@@ -35,7 +35,12 @@
         {{ item.notifyCount }}
       </template>
     </div>
-    <div ref="popupContainer" class="popup-container">
+    <div
+      ref="popupContainer"
+      class="popup-container"
+      @focusin="toggleInputWithin($event, true)"
+      @focusout="toggleInputWithin($event, false)"
+    >
       <div v-if="item.popupContent" class="popup" :class="popupClasses(item)">
         <component
           :is="item.popupContent"
@@ -77,6 +82,7 @@ export default Vue.extend({
     return {
       newTab: isOpenInNewTab(this.item),
       cancelListeners: none,
+      inputWithin: false,
     }
   },
   mounted() {
@@ -96,6 +102,13 @@ export default Vue.extend({
     this.cancelListeners?.()
   },
   methods: {
+    toggleInputWithin(e: FocusEvent, value: boolean) {
+      if (!(e.target instanceof HTMLInputElement)) {
+        this.inputWithin = false
+        return
+      }
+      this.inputWithin = value
+    },
     updateLinkOption() {
       this.newTab = isOpenInNewTab(this.item)
     },
@@ -111,7 +124,10 @@ export default Vue.extend({
       if (!popup) {
         return
       }
-      const allowRefresh = CustomNavbarItem.navbarOptions.refreshOnPopup && popup.popupRefresh && typeof popup.popupRefresh === 'function'
+      const allowRefresh =
+        CustomNavbarItem.navbarOptions.refreshOnPopup &&
+        popup.popupRefresh &&
+        typeof popup.popupRefresh === 'function'
       if (!initialPopup && allowRefresh) {
         popup.popupRefresh()
       }
@@ -129,11 +145,9 @@ export default Vue.extend({
       }
       if (!item.requestedPopup) {
         item.requestedPopup = true
-        console.log('requestedPopup', true)
         this.triggerPopupShow(true)
         return
       }
-      console.log('requestedPopup', false)
       this.triggerPopupShow(false)
     },
     // async initPopper() {
@@ -154,6 +168,8 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
+@import 'common';
+
 .custom-navbar-item {
   color: inherit;
   position: relative;
@@ -215,7 +231,7 @@ export default Vue.extend({
   }
 
   &.active .main-content {
-    font-weight: bold;
+    @include semi-bold();
     font-size: 11pt;
   }
 
@@ -264,12 +280,15 @@ export default Vue.extend({
     pointer-events: none;
   }
 
-  &:not(.disabled):hover .popup-container {
-    top: 100%;
-    > .popup {
-      // transform: translateY(0) translateX(-50%);
-      pointer-events: initial;
-      opacity: 1;
+  &:not(.disabled):hover,
+  &:not(.disabled).input-within {
+    .popup-container {
+      top: 100%;
+      > .popup {
+        // transform: translateY(0) translateX(-50%);
+        pointer-events: initial;
+        opacity: 1;
+      }
     }
   }
 
@@ -295,9 +314,10 @@ export default Vue.extend({
     color: var(--foreground-color);
     border-radius: 0 0 8px 8px;
 
-    &:not(:empty):not(.hidden) {
+    html:not([data-navbar-notify-style='hidden']) &:not(:empty):not(.hidden) {
       opacity: 1;
     }
+    html[data-navbar-notify-style='dot'] &,
     &.dot {
       color: transparent;
       border-radius: 50%;

@@ -1,6 +1,11 @@
 import { PluginMetadata } from '@/plugins/plugin'
 import { TagFilter } from '@/components/settings-panel/tag-filter'
 import { ComponentMetadata } from '@/components/types'
+import type { Options as SettingPanelOptions } from '@/components/settings-panel'
+
+type ExtendedOptions = SettingPanelOptions & {
+  recentComponents?: Record<string, number>
+}
 
 export const plugin: PluginMetadata = {
   name: 'settingsPanel.tagFilters.recentComponents',
@@ -9,7 +14,7 @@ export const plugin: PluginMetadata = {
   setup: ({ addData, addHook }) => {
     const getRecentComponents = async () => {
       const { getGeneralSettings } = await import('@/core/settings')
-      const generalSettings = getGeneralSettings()
+      const generalSettings: ExtendedOptions = getGeneralSettings()
       if (!generalSettings.recentComponents) {
         generalSettings.recentComponents = {}
       }
@@ -35,19 +40,16 @@ export const plugin: PluginMetadata = {
     })
     addData('settingsPanel.tagFilters', async (tagFilters: TagFilter[]) => {
       const recentComponents = await getRecentComponents()
-      tagFilters.unshift(({ renderedComponents }) => (
-        {
-          name: 'recent',
-          displayName: '最近',
-          color: 'inherit',
-          icon: 'mdi-clock-outline',
-          order: 0,
-          count: renderedComponents.length,
-          filter: components => (
-            lodash.sortBy(components, it => recentComponents[it.name] ?? 0).reverse()
-          ),
-        }
-      ))
+      tagFilters.unshift(({ renderedComponents }) => ({
+        name: 'recent',
+        displayName: '最近',
+        color: 'inherit',
+        icon: 'mdi-clock-outline',
+        order: 0,
+        count: renderedComponents.length,
+        filter: components =>
+          lodash.sortBy(components, it => recentComponents[it.name] ?? 0).reverse(),
+      }))
     })
   },
 }

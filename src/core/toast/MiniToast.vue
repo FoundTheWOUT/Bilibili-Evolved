@@ -29,17 +29,28 @@ export default Vue.extend({
       type: String,
       default: 'local',
     },
+    placement: {
+      type: String,
+      default: undefined,
+    },
   },
   data() {
     return {
       toast: null,
     }
   },
+  watch: {
+    placement(newValue: string) {
+      if (newValue && this.toast) {
+        this.toast.placement = newValue
+      }
+    },
+  },
   async mounted() {
     await this.$nextTick()
     const appendTarget = containerMap[this.container]
-    this.toast = createMiniToast(this.message, this.$refs.content, {
-      content: this.$refs.toast,
+    this.toast = createMiniToast(this.$refs.toast, this.$refs.content, {
+      placement: this.placement,
       showOnCreate: this.show,
       trigger: 'mouseenter focusin',
       onHide: () => {

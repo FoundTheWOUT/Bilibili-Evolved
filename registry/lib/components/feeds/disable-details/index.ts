@@ -1,4 +1,4 @@
-import { ComponentMetadata } from '@/components/types'
+import { defineComponentMetadata } from '@/components/define'
 import { FeedsCard, feedsCardTypes } from '@/components/feeds/api'
 import { feedsUrls } from '@/core/utils/urls'
 
@@ -18,29 +18,50 @@ const entry = async () => {
   addStyle()
   const disableDetails = (card: FeedsCard) => {
     const { element } = card
-    element.addEventListener('click', e => {
-      if (e.ctrlKey || !enabled) {
-        return
-      }
-      const contents = dqa(element, '.content, .bili-dyn-content [data-module="desc"] .bili-rich-text')
-      const target = e.target as HTMLElement
-      if (target.hasAttribute('click-title')) {
-        return
-      }
-      const popups = dqa(element, '.im-popup')
-      if (popups.some(p => p.contains(target))) {
-        return
-      }
-      if (contents.some(c => c === target || c.contains(target))) {
-        e.stopImmediatePropagation()
-      }
-    }, { capture: true })
+    element.addEventListener(
+      'click',
+      e => {
+        if (e.ctrlKey || !enabled) {
+          return
+        }
+        const contents = dqa(
+          element,
+          '.content, .bili-dyn-content [data-module="desc"] .bili-rich-text, .dyn-card-opus__summary',
+        )
+        const target = e.target as HTMLElement
+        if (target.hasAttribute('click-title')) {
+          return
+        }
+        if (
+          [
+            'bili-rich-text__action',
+            'bili-rich-text-topic',
+            'bili-rich-text-module',
+            'bili-rich-text-link',
+          ].some(className => target.classList.contains(className))
+        ) {
+          return
+        }
+        const popups = dqa(element, '.im-popup')
+        if (popups.some(p => p.contains(target))) {
+          return
+        }
+        if (contents.some(c => c === target || c.contains(target))) {
+          e.stopImmediatePropagation()
+        }
+      },
+      { capture: true },
+    )
     const postContent = dq(element, '.post-content, .bili-dyn-content')
     if (!postContent) {
       return
     }
-    const hasCardContainer = ['.video-container', '.bangumi-container', '.media-list', '.article-container']
-      .some(type => dq(postContent, type))
+    const hasCardContainer = [
+      '.video-container',
+      '.bangumi-container',
+      '.media-list',
+      '.article-container',
+    ].some(type => dq(postContent, type))
     if (hasCardContainer) {
       return
     }
@@ -48,14 +69,17 @@ const entry = async () => {
       return
     }
     if (postContent.classList.contains('repost') || card.type === feedsCardTypes.repost) {
-      const contents = dq(postContent, '.content, .bili-dyn-content__orig__desc') as HTMLElement
+      const contents = dq(
+        postContent,
+        '.content, .bili-dyn-content__orig__desc, .dyn-card-opus__summary',
+      ) as HTMLElement
       if (!contents) {
         return
       }
       const details = document.createElement('div')
       details.classList.add('details')
       details.setAttribute('click-title', '详情')
-      details.innerHTML = /* html */`
+      details.innerHTML = /* html */ `
         详情<i class="mdi mdi-chevron-right" click-title></i>
       `
       contents.insertAdjacentElement('beforeend', details)
@@ -65,12 +89,10 @@ const entry = async () => {
     added: disableDetails,
   })
 }
-export const component: ComponentMetadata = {
+export const component = defineComponentMetadata({
   name: 'disableFeedsDetails',
   displayName: '禁止跳转动态详情',
-  tags: [
-    componentsTags.feeds,
-  ],
+  tags: [componentsTags.feeds],
   urlInclude: feedsUrls,
   description: {
     'zh-CN': '禁止动态点击后跳转详情页, 方便选择其中的文字.',
@@ -84,4 +106,4 @@ export const component: ComponentMetadata = {
     addStyle()
     enabled = true
   },
-}
+})
