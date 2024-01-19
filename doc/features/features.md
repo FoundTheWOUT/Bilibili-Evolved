@@ -291,6 +291,8 @@ by [@Tinhone](https://github.com/Tinhone)
 
 > 注：在某些浏览器 (如 `Microsoft Edge`) 中，夜间模式仅会同步浏览器的亮 / 暗主题.
 
+> 注：在某些浏览器(如`Microsoft Edge`)中，夜间模式仅会同步浏览器的亮/暗主题.
+
 ### [夜间模式](../../registry/dist/components/style/dark-mode.js)
 `darkMode`
 
