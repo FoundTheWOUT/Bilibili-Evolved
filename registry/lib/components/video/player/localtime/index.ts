@@ -41,13 +41,16 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
     top: '0',
     right: '0',
     zIndex: '10',
-    fontSize: 'x-large',
+    fontFamily: 'Arial',
+    fontSize: '24px',
     fontWeight: 'bold',
     margin: '1rem',
   }
   const dyStyle = {
     color: options.color,
     opacity: options.opacity,
+    fontFamily: options.fontFamily,
+    fontSize: `${options.fontSize}px`,
   }
 
   // 绑定样式
@@ -58,7 +61,11 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
   // 绑定动态样式
   Object.keys(dyStyle).forEach(key => {
     addComponentListener(`${metadata.name}.${key}`, (value: string) => {
-      time.style[key] = value
+      if (key === 'fontSize') {
+        time.style.fontSize = `${value}px`
+      } else {
+        time.style[key] = value
+      }
     })
   })
 
@@ -134,6 +141,19 @@ export const component: ComponentMetadata = {
       defaultValue: Position.TR,
       displayName: '位置',
       dropdownEnum: Position,
+    },
+    fontFamily: {
+      defaultValue: '',
+      displayName: '字体',
+    },
+    fontSize: {
+      defaultValue: 24,
+      displayName: '尺寸',
+      slider: {
+        min: 10,
+        max: 100,
+        step: 1,
+      },
     },
   },
   urlInclude: allVideoUrls,
