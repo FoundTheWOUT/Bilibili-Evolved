@@ -31,6 +31,10 @@ const parseTime = (t: Date, options: any): string => {
 enum Position {
   TR = '右上角',
   TL = '左上角',
+  TC = '顶部中央',
+  BR = '右下角',
+  BL = '左下角',
+  BC = '底部中央',
 }
 
 const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
@@ -78,6 +82,26 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
       } else if (value === Position.TL) {
         time.style.right = ''
         time.style.left = '0'
+      } else if (value === Position.BR) {
+        time.style.left = ''
+        time.style.right = '0'
+        time.style.top = ''
+        time.style.bottom = '0'
+      } else if (value === Position.BL) {
+        time.style.right = ''
+        time.style.left = '0'
+        time.style.top = ''
+        time.style.bottom = '0'
+      } else if (value === Position.TC) {
+        time.style.right = ''
+        time.style.left = '50%'
+        time.style.transform = 'translateX(-50%)'
+      } else if (value === Position.BC) {
+        time.style.right = ''
+        time.style.left = '50%'
+        time.style.top = ''
+        time.style.bottom = '0'
+        time.style.transform = 'translateX(-50%)'
       }
     },
     true,
