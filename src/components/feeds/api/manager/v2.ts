@@ -1,12 +1,7 @@
 import { childList } from '@/core/observer'
 import { descendingStringSort } from '@/core/utils/sort'
-import { pascalCase } from '@/core/utils'
-import {
-  createNodeValidator,
-  FeedsCardsManager,
-  FeedsCardsManagerEventType,
-  getVueData,
-} from './base'
+import { pascalCase, getVue2Data } from '@/core/utils'
+import { createNodeValidator, FeedsCardsManager, FeedsCardsManagerEventType } from './base'
 import { FeedsCard, FeedsCardType, feedsCardTypes, isRepostType } from '../types'
 import { selectAll } from '@/core/spin-query'
 
@@ -20,6 +15,12 @@ const feedsCardTypeMap = {
   DynamicTypeArticle: feedsCardTypes.column,
   DynamicTypeMusic: feedsCardTypes.audio,
   DynamicTypeLiveRcmd: feedsCardTypes.liveRecord,
+  DynamicTypeCoursesSeason: feedsCardTypes.courses,
+  DynamicTypeOpus: feedsCardTypes.textWithImages,
+  DynamicTypeLive: feedsCardTypes.live,
+  DynamicTypeMedialist: feedsCardTypes.mediaList,
+  DynamicTypeSubscription: feedsCardTypes.mediaList,
+  DynamicTypeUgcSeason: feedsCardTypes.ugcSeason,
 }
 
 const combineText = (...texts: string[]) =>
@@ -28,7 +29,7 @@ const combineText = (...texts: string[]) =>
     .join('\n')
     .trim()
 const getType = (rawType: string): FeedsCardType =>
-  feedsCardTypeMap[pascalCase(rawType)] ?? feedsCardTypeMap.DynamicTypeWord
+  feedsCardTypeMap[pascalCase(rawType)] ?? feedsCardTypes.unknown
 const getText = (dynamicModule: any, cardType: FeedsCardType) => {
   const isOpusModule = Object.hasOwn(dynamicModule, 'paragraphs')
   if (isOpusModule) {
@@ -78,7 +79,7 @@ const getText = (dynamicModule: any, cardType: FeedsCardType) => {
   return combineText(mainText, typeText)
 }
 const parseCard = async (element: HTMLElement): Promise<FeedsCard> => {
-  const vueData = getVueData(element)
+  const vueData = getVue2Data(element)
   const parseModules = (rawModules: any) => {
     if (Array.isArray(rawModules)) {
       return Object.fromEntries(
@@ -129,6 +130,7 @@ const parseCard = async (element: HTMLElement): Promise<FeedsCard> => {
     }
     card.getText = async () =>
       combineText(getText(modules.module_dynamic, cardType), getText(repostDynamicModule, cardType))
+    card.repostId = vueData.data.orig.id_str
   }
   card.text = await card.getText()
   card.element.setAttribute('data-did', card.id)
@@ -157,7 +159,7 @@ export class FeedsCardsManagerV2 extends FeedsCardsManager {
     if (!isNodeValid(node)) {
       return
     }
-    const vueData = getVueData(node)
+    const vueData = getVue2Data(node)
     if (!vueData) {
       return
     }

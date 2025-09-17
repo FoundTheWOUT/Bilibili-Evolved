@@ -1,49 +1,162 @@
-import { DownloadPackage } from '@/core/download'
+import { DownloadPackage, PackageEntry } from '@/core/download'
 import { meta } from '@/core/meta'
+import { getComponentSettings } from '@/core/settings'
 import { Toast } from '@/core/toast'
+import { formatFileSize, formatPercent } from '@/core/utils/formatters'
+import { title as pluginTitle } from '.'
+import type { Options } from '../../../../components/video/download'
+import { DownloadVideoAction } from '../../../../components/video/download/types'
 import { FFmpeg } from './ffmpeg'
-import { httpGet, toBlobUrl, toastProgress } from './utils'
+import { getCacheOrFetch, getContentLength, httpGet, toastProgress, toBlobUrl } from './utils'
 
 const ffmpeg = new FFmpeg()
 
-async function load(toast: Toast) {
-  await ffmpeg.load({
-    workerLoadURL: await toBlobUrl(
+async function loadFFmpeg() {
+  const toast = Toast.info('正在加载 FFmpeg', `${pluginTitle} - 初始化`)
+
+  const progress = toastProgress(toast)
+  const [worker, core, wasm] = await Promise.all([
+    getCacheOrFetch(
+      'ffmpeg-worker',
       meta.compilationInfo.altCdn.library.ffmpeg.worker,
-      'text/javascript',
-      toastProgress(toast, '正在加载 FFmpeg Worker'),
+      progress(0, '正在加载 FFmpeg Worker'),
     ),
-    coreURL: await toBlobUrl(
+    getCacheOrFetch(
+      'ffmpeg-core',
       meta.compilationInfo.altCdn.library.ffmpeg.core,
-      'text/javascript',
-      toastProgress(toast, '正在加载 FFmpeg Core'),
+      progress(1, '正在加载 FFmpeg Core'),
     ),
-    wasmURL: await toBlobUrl(
+    getCacheOrFetch(
+      'ffmpeg-wasm',
       meta.compilationInfo.altCdn.library.ffmpeg.wasm,
-      'application/wasm',
-      toastProgress(toast, '正在加载 FFmpeg WASM'),
+      progress(2, '正在加载 FFmpeg WASM'),
     ),
-  })
-}
-export async function run(name: string, videoUrl: string, audioUrl: string, toast: Toast) {
-  if (!ffmpeg.loaded) {
-    await load(toast)
-  }
+  ])
 
-  ffmpeg.writeFile('video', await httpGet(videoUrl, toastProgress(toast, '正在下载视频流')))
-  ffmpeg.writeFile('audio', await httpGet(audioUrl, toastProgress(toast, '正在下载音频流')))
-
-  toast.message = '混流中……'
-
-  await ffmpeg.exec(['-i', 'video', '-i', 'audio', '-c:v', 'copy', '-c:a', 'copy', 'output.mp4'])
-
-  const output = await ffmpeg.readFile('output.mp4')
-  const outputBlob = new Blob([output], {
-    type: 'video/mp4',
+  await ffmpeg.load({
+    workerLoadURL: toBlobUrl(worker, 'text/javascript'),
+    coreURL: toBlobUrl(core, 'text/javascript'),
+    wasmURL: toBlobUrl(wasm, 'application/wasm'),
   })
 
   toast.message = '完成！'
-  toast.duration = 1500
+  toast.close()
+}
 
-  await DownloadPackage.single(name, outputBlob)
+async function single(
+  name: string,
+  videoUrl: string,
+  audioUrl: string,
+  ffmetadata: string,
+  outputMkv: boolean,
+  pageIndex = 1,
+  totalPages = 1,
+) {
+  const toast = Toast.info('', `${pluginTitle} - ${pageIndex} / ${totalPages}`)
+
+  const progress = toastProgress(toast)
+  const [video, audio] = await Promise.all([
+    httpGet(videoUrl, progress(0, '正在下载视频流')),
+    httpGet(audioUrl, progress(1, '正在下载音频流')),
+  ])
+
+  await ffmpeg.writeFile('video', video)
+  await ffmpeg.writeFile('audio', audio)
+
+  const args = ['-i', 'video', '-i', 'audio']
+
+  if (ffmetadata) {
+    await ffmpeg.writeFile('ffmetadata', new TextEncoder().encode(ffmetadata))
+    args.push('-i', 'ffmetadata', '-map_metadata', '2')
+    if (!outputMkv) {
+      args.push('-movflags', '+use_metadata_tags')
+    }
+  }
+
+  args.push('-codec', 'copy', '-f', outputMkv ? 'matroska' : 'mp4', 'output')
+
+  console.debug('FFmpeg commandline args:', args.join(' '))
+
+  ffmpeg.onProgress(event => {
+    toast.message = `混流中: ${formatPercent(event.progress)}`
+  })
+  await ffmpeg.exec(args)
+
+  const output = await ffmpeg.readFile('output')
+  const outputBlob = new Blob([output], {
+    type: outputMkv ? 'video/x-matroska' : 'video/mp4',
+  })
+
+  toast.message = '完成！'
+  toast.duration = 1000
+
+  await Promise.all([
+    ffmpeg.deleteFile('video'),
+    ffmpeg.deleteFile('audio'),
+    ffmpeg.deleteFile('output'),
+    ffmetadata ? ffmpeg.deleteFile('ffmetadata') : Promise.resolve(),
+  ])
+
+  await DownloadPackage.single(
+    name.replace(/.[^/.]+$/, `.${outputMkv ? 'mkv' : 'mp4'}`),
+    outputBlob,
+  )
+}
+
+export async function run(action: DownloadVideoAction, muxWithMetadata: boolean) {
+  if (!ffmpeg.loaded) {
+    await loadFFmpeg()
+  }
+
+  const { infos: pages, extraAssets } = action
+
+  let ffmetadata: PackageEntry[]
+  if (muxWithMetadata) {
+    const extraAssetsForBrowser = []
+    for (const { asset, instance } of extraAssets) {
+      if (!ffmetadata && asset.name === 'saveVideoMetadata' && instance.type === 'ffmetadata') {
+        ffmetadata = await asset.getAssets(pages, instance)
+      } else {
+        extraAssetsForBrowser.push({ asset, instance })
+      }
+    }
+    action.extraAssets = extraAssetsForBrowser
+  }
+
+  const { dashAudioExtension, dashFlacAudioExtension, dashVideoExtension } =
+    getComponentSettings<Options>('downloadVideo').options
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i]
+    const [video, audio] = page.titledFragments
+    if (
+      !(
+        page.fragments.length === 2 &&
+        video.extension === dashVideoExtension &&
+        (audio.extension === dashAudioExtension || audio.extension === dashFlacAudioExtension)
+      )
+    ) {
+      throw new Error('仅支持 DASH 格式视频和音频')
+    }
+
+    const [videoSize, audioSize] = await Promise.all([
+      getContentLength(video.url),
+      getContentLength(audio.url),
+    ])
+    const size = Math.max(videoSize, video.size) + Math.max(audioSize, audio.size)
+    // 2000 * 1024 * 1024
+    if (size > 2097152000) {
+      throw new Error(`仅支持合并 2GB 内的音视频（${formatFileSize(size)}）`)
+    }
+
+    await single(
+      video.title,
+      video.url,
+      audio.url,
+      <string>ffmetadata?.[i]?.data,
+      audio.extension === dashFlacAudioExtension,
+      i + 1,
+      pages.length,
+    )
+  }
 }

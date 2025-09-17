@@ -2,16 +2,18 @@
 /* eslint-disable yoda */
 import { defineComponentMetadata } from '@/components/define'
 import { CommentItem, CommentReplyItem } from '@/components/utils/comment-apis'
+import { select } from '@/core/spin-query'
 
 // 新版评论区IP属地获取
-const getIpLocation = (element: HTMLElement) => {
-  const props = (element as any).__vueParentComponent?.props
-  const reply = props?.reply ?? props?.subReply
+const getIpLocation = (item: CommentReplyItem) => {
+  const reply = item.frameworkSpecificProps
   return reply?.reply_control?.location ?? undefined
 }
 
 let version = 2
 let bbComment: any
+
+const marginLeft = 15
 
 // 带IP属地显示的评论创建
 const createListCon = function listCon(item, i, pos) {
@@ -29,7 +31,9 @@ const createListCon = function listCon(item, i, pos) {
     '<span class="time-location">',
     '<span class="reply-time">'.concat(this._formateTime(item.ctime), '</span>'),
     item?.reply_control?.location
-      ? `<span class="reply-location">${item?.reply_control?.location || ''}</span>`
+      ? `<span class="reply-location" style="margin-left:${marginLeft}px;">${
+          item?.reply_control?.location || ''
+        }</span>`
       : '',
     '</span>',
     item.lottery_id
@@ -90,7 +94,9 @@ const createSubReplyItem = function subReply(item, i) {
     '<span class="time-location">',
     '<span class="reply-time">'.concat(this._formateTime(item.ctime), '</span>'),
     item?.reply_control?.location
-      ? `<span class="reply-location">${item?.reply_control?.location || ''}</span>`
+      ? `<span class="reply-location" style="margin-left:${marginLeft}px;">${
+          item?.reply_control?.location || ''
+        }</span>`
       : '',
     '</span>',
     `<span class="like ${item.action === 1 ? 'liked' : ''}"><i></i><span>${
@@ -135,7 +141,7 @@ const blackroomCreateListCon = function listCon(e, n, t) {
     this._createPlatformDom(e.content.plat),
     `<span class="time">${this._formateTime(e.ctime)}</span>`,
     e?.reply_control?.location
-      ? `<span style="margin-left:-15px;">${e?.reply_control?.location || ''}</span>`
+      ? `<span style="margin-left:${marginLeft - 15}px;">${e?.reply_control?.location || ''}</span>`
       : '',
     e.lottery_id
       ? ''
@@ -197,7 +203,7 @@ const blackroomCreateSubReplyItem = function subReply(e, n) {
     '<div class="info">',
     `<span class="time">${this._formateTime(e.ctime)}</span>`,
     e?.reply_control?.location
-      ? `<span style="margin-left:-15px;">${e?.reply_control?.location || ''}</span>`
+      ? `<span style="margin-left:${marginLeft - 15}px;">${e?.reply_control?.location || ''}</span>`
       : '',
     `<span class="like ${1 === e.action ? 'liked' : ''}"><i></i><span>${
       e.like || ''
@@ -267,20 +273,37 @@ const observer = new MutationObserver(mutations => {
 observer.observe(document.head, { childList: true })
 
 const processItems = (items: CommentReplyItem[]) => {
-  items.forEach(item => {
-    const location = getIpLocation(item.element)
-    if (location !== undefined) {
-      const replyTime =
+  items.forEach(async item => {
+    const location = getIpLocation(item)
+    if (location === undefined) {
+      return
+    }
+    const replyTime = await (() => {
+      if (item.shadowDomEntry) {
+        return select(() => item.shadowDomEntry.querySelector('#pubdate'), {
+          queryInterval: 100,
+          maxRetry: 30,
+        })
+      }
+      return (
         item.element.querySelector('.reply-info>.reply-time') ??
         item.element.querySelector('.sub-reply-info>.sub-reply-time')
-      if (replyTime.childElementCount === 0) {
-        // 避免在评论更新的情况下重复添加
-        const replyLocation = document.createElement('span')
-        replyLocation.style.marginLeft = '5px'
-        replyLocation.innerText = location
-        replyTime.appendChild(replyLocation)
-      }
+      )
+    })()
+    if (replyTime === null) {
+      return
     }
+    const existingLocation = replyTime.querySelector('.ip-location') as HTMLElement | null
+    if (existingLocation !== null) {
+      existingLocation.innerText = location
+      return
+    }
+
+    const replyLocation = document.createElement('span')
+    replyLocation.className = 'ip-location'
+    replyLocation.style.marginLeft = `${marginLeft}px`
+    replyLocation.innerText = location
+    replyTime.appendChild(replyLocation)
   })
 }
 

@@ -1,5 +1,4 @@
 import { getJsonWithCredentials, bilibiliApi } from '@/core/ajax'
-import { fixed } from '@/core/utils'
 import { formatDuration } from '@/core/utils/formatters'
 
 /** 历史项目类型, 值为 API 中的 `history.business` */
@@ -37,8 +36,10 @@ export interface HistoryItem {
   duration: number
   /** 时长展示文字 */
   durationText: string
-  /** 视频的分P */
+  /** 视频的分 P */
   page?: number
+  /** 视频的分 P 数 */
+  pages?: number
   /** 直播状态: 0 未开播 1 直播中 2 轮播中 (似乎新 API 不会返回 2) */
   liveStatus?: number
   /** 视频的tag/直播的分区名 */
@@ -107,13 +108,13 @@ const getTimeData = () => {
   }
 }
 const formatTime = (date: Date) => {
-  const { yesterday } = getTimeData()
+  const { yesterday, today } = getTimeData()
   const timestamp = Number(date)
   if (timestamp >= yesterday) {
-    return `${date.getHours().toString().padStart(2, '0')}:${date
-      .getMinutes()
+    return `${timestamp >= today ? '今天' : '昨天'} ${date
+      .getHours()
       .toString()
-      .padStart(2, '0')}`
+      .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
   }
   return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date
     .getDate()
@@ -132,6 +133,7 @@ const parseHistoryItem = (item: any): HistoryItem => {
     bvid, // 视频 bv号
     cid, // 专栏 cv号
     oid, // 直播 房间号 / 专栏 cv 号 / 课程神秘标识符
+    page,
   } = item.history
   const progressParam = item.progress > 0 ? `t=${item.progress}` : 't=0'
   const progress = item.progress === -1 ? 1 : item.progress / item.duration
@@ -154,7 +156,9 @@ const parseHistoryItem = (item: any): HistoryItem => {
     cover,
     covers: item.covers?.map(https) ?? [],
     progress,
-    progressText: Number.isNaN(progress) ? null : `${fixed(progress * 100, 1)}%`,
+    progressText: Number.isNaN(progress)
+      ? null
+      : `${formatDuration(item.progress)} / ${formatDuration(item.duration)}`,
     duration: item.duration,
     durationText: item.duration ? formatDuration(item.duration) : null,
     upName: item.author_name,
@@ -188,6 +192,8 @@ const parseHistoryItem = (item: any): HistoryItem => {
       id: bvid,
       url: `https://www.bilibili.com/video/${bvid}?p=${item.history.page}&${progressParam}`,
       type: HistoryType.Video,
+      page,
+      pages: item.videos,
     }
   }
   if (cid) {

@@ -20,9 +20,8 @@ jobs:
           git config --global core.autocrlf true
           git config --global core.safecrlf false
       - name: Install dependencies
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v4
         with:
-          version: latest
           run_install: true
       - name: Type check
         run: pnpm run type

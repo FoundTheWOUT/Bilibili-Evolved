@@ -41,7 +41,13 @@ export const installComponent = async (code: string) => {
     const defaultSettings = componentToSettings(component)
     lodash.defaultsDeep(
       existingComponent.settings.options,
-      lodash.pickBy(defaultSettings.options, value => !Array.isArray(value)),
+      lodash.pickBy(defaultSettings.options, (value, key) => {
+        const isArray = Array.isArray(value)
+        if (isArray) {
+          return lodash.get(existingComponent.settings.options, key) === undefined
+        }
+        return true
+      }),
     )
     return {
       metadata: component,
@@ -91,8 +97,8 @@ export const uninstallComponent = async (nameOrDisplayName: string) => {
     // 移除可能的 instantStyles
     const { instantStyles } = components[index]
     if (instantStyles) {
-      const { removeStyle } = await import('@/core/style')
-      instantStyles.forEach(s => removeStyle(s.name))
+      const { removeInstantStyle } = await import('@/core/style')
+      instantStyles.forEach(s => removeInstantStyle(s))
     }
     // 移除可能的 widgets
     componentSettings.enabled = false
