@@ -32,7 +32,7 @@
 
 **注意事项**
 - **⚠ 使用正式版 (GitHub 源) 和预览版须翻墙.**
-- 默认不预装任何组件, 需要在按[设置](#设置)中的说明添加感兴趣的功能; 默认会屏蔽双击全屏, 如有需要可以安装 `双击全屏` 组件来恢复.
+- 默认不预装任何组件, 需要在按[设置](#设置)中的说明添加感兴趣的功能.
 - 这个是一个综合性的脚本, 如果只是想下载视频建议去 [GreasyFork](https://greasyfork.org/zh-CN/scripts/by-site/bilibili.com) 找个更专业的.
 - 对性能有较大影响, 详见[配置要求](#配置).
 - 默认不对未登录的状态做适配.
@@ -74,7 +74,7 @@
 ## 最低配置
 - 操作系统: Windows 8.1 / macOS Big Sur
 - 分辨率: 1920x1080, 缩放 125%
-- 浏览器: Chrome 105+ / Firefox 121+ / Safari 15.4+ (仅理论上能运行, 没测试过)
+- 浏览器: Chrome 105+ / Firefox 140+ / Safari 18.4+ (仅理论上能运行, 没测试过)
 - 处理器: Intel Core i5-10500 / AMD Ryzen 5 3600
 - 内存: 8GB
 - 脚本管理器: Tampermonkey 5.0 / Violentmonkey 2.18
@@ -84,7 +84,7 @@
 ## 推荐配置
 - 操作系统: Windows 10 / macOS Sonoma
 - 分辨率: 3840x2160, 缩放 200%
-- 浏览器: Chrome 120+ / Firefox 121+
+- 浏览器: Chrome 120+ / Firefox 140+
 - 处理器: Intel Core i7-11700 / AMD Ryzen 7 5800
 - 内存: 32GB
 - 脚本管理器: Tampermonkey 5.0 / Violentmonkey 2.18
@@ -106,7 +106,7 @@
 
 ## 浏览器
 
-支持**最新版** Chrome, Edge (Chromium 内核), Firefox, 不保证脚本能在["套壳类浏览器"](https://www.jianshu.com/p/67d790a8f221)或者较长时间没更新的浏览器中完美运行.
+支持**最新版** Chrome, Firefox, 不保证脚本能在 Safari 和 ["套壳类浏览器"](https://www.jianshu.com/p/67d790a8f221) 中完美运行.
 
 # 开发者
 
@@ -152,10 +152,9 @@
 # 相关推荐
 这些脚本/插件同样能够改善您在B站的体验, 相同的功能将不会整合到 Bilibili Evolved, 但会尽可能地适配
 
-## bilibili 网页端添加 APP 首页推荐
-作者: [indefined](https://github.com/indefined)
-- [GitHub](https://github.com/indefined/UserScripts/tree/master/bilibiliHome)
-- [GreasyFork](https://greasyfork.org/zh-CN/scripts/368446-bilibili%E7%BD%91%E9%A1%B5%E7%AB%AF%E6%B7%BB%E5%8A%A0app%E9%A6%96%E9%A1%B5%E6%8E%A8%E8%8D%90)
+## BewlyBewly
+作者: [Hakadao](https://github.com/hakadao)
+- [GitHub](https://github.com/BewlyBewly/BewlyBewly)
 
 ## pakku.js 哔哩哔哩弹幕过滤器
 作者: [xmcp](https://github.com/xmcp)
@@ -177,7 +176,7 @@
 
 > 之前的支付宝付款码有点问题, 现已弃用 (不必担心, 转账均已收到), 在爱发电中仍然可以选择支付宝作为付款方式.
 
-<a href="https://afdian.net/@the1812" target="_blank">
+<a href="https://afdian.com/a/the1812" target="_blank">
   <img alt="爱发电" src="./images/compressed/afdian.jpg" width="400">
 </a>
 

@@ -1,7 +1,8 @@
 <template>
   <div
     tabindex="0"
-    class="be-launch-bar-action-item suggest-item"
+    class="be-launch-bar-action-item be-launch-bar-suggest-item"
+    :class="{ focused }"
     :title="action.displayName || action.name"
     :data-indexer="action.indexer"
     @click.self="performAction($event)"
@@ -10,27 +11,35 @@
     @keydown.up.prevent.stop="$emit('previous-item', $event.currentTarget)"
     @keydown.down.prevent.stop="$emit('next-item', $event.currentTarget)"
   >
-    <div class="suggest-item-content">
-      <div v-if="action.icon" class="suggest-item-icon" @click="performAction($event)">
+    <div class="be-launch-bar-suggest-item-content">
+      <div
+        v-if="action.icon"
+        class="be-launch-bar-suggest-item-icon"
+        @click="performAction($event)"
+      >
         <VIcon :icon="action.icon" :size="18" />
       </div>
-      <div class="suggest-item-title" @click="performAction($event)">
+      <div class="be-launch-bar-suggest-item-title" @click="performAction($event)">
         <component
           :is="action.content"
           v-if="action.content"
-          class="suggest-item-name"
+          class="be-launch-bar-suggest-item-name"
           :name="action.name"
         ></component>
-        <div v-else class="suggest-item-name">
+        <div v-else class="be-launch-bar-suggest-item-name">
           {{ action.displayName || action.name }}
         </div>
-        <div v-if="action.description" class="suggest-item-description">
+        <div
+          v-if="action.description"
+          class="be-launch-bar-suggest-item-description"
+          :title="action.description"
+        >
           {{ action.description }}
         </div>
       </div>
       <div
         v-if="action.deleteAction"
-        class="suggest-item-delete"
+        class="be-launch-bar-suggest-item-delete"
         title="删除此项"
         @click="performDelete($event)"
       >
@@ -39,40 +48,51 @@
     </div>
   </div>
 </template>
-<script lang="ts">
+<script setup lang="ts">
 import { VIcon } from '@/ui'
 
-export default Vue.extend({
-  components: {
-    VIcon,
-  },
-  props: {
-    action: {
-      type: Object,
-      required: true,
-    },
-  },
-  methods: {
-    async performAction(event: KeyboardEvent | MouseEvent) {
-      const { currentTarget } = event
-      await this.action.action()
-      this.$emit('action', currentTarget)
-    },
-    async performDelete(event: KeyboardEvent | MouseEvent) {
-      const { currentTarget } = event
-      if (!this.action.deleteAction) {
-        return
-      }
-      await this.action.deleteAction()
-      this.$emit('delete-item', currentTarget)
-    },
-  },
-})
+interface Props {
+  focused?: boolean
+  action: {
+    name: string
+    displayName?: string
+    icon?: string
+    description?: string
+    indexer?: string
+    content?: any
+    action: () => Promise<void> | void
+    deleteAction?: () => Promise<void> | void
+  }
+}
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  (event: 'previous-item', currentTarget: EventTarget | null): void
+  (event: 'next-item', currentTarget: EventTarget | null): void
+  (event: 'action', currentTarget: EventTarget | null): void
+  (event: 'delete-item', currentTarget: EventTarget | null): void
+}>()
+
+const performAction = async (event: KeyboardEvent | MouseEvent) => {
+  const { currentTarget } = event
+  await props.action.action()
+  emit('action', currentTarget)
+}
+
+const performDelete = async (event: KeyboardEvent | MouseEvent) => {
+  const { currentTarget } = event
+  if (!props.action.deleteAction) {
+    return
+  }
+  await props.action.deleteAction()
+  emit('delete-item', currentTarget)
+}
 </script>
 <style lang="scss">
 @import 'common';
 
-.suggest-item {
+.be-launch-bar-suggest-item {
   outline: none !important;
   padding: 6px 6px 6px 10px;
   cursor: pointer;
@@ -81,6 +101,7 @@ export default Vue.extend({
     @include h-center();
     justify-content: center;
   }
+  &:not(.disabled).focused,
   &:not(.disabled):hover,
   &:not(.disabled):focus-within {
     background-color: #8882;
@@ -111,6 +132,7 @@ export default Vue.extend({
   &-description {
     opacity: 0.5;
     font-size: smaller;
+    @include single-line();
   }
   &-delete {
     opacity: 0.5;

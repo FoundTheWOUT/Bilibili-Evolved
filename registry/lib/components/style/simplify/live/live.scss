@@ -27,7 +27,8 @@ $prefix: 'simplifyLiveroom-switch';
   &-pk .chaos-pk,
   &-pk .awesome-pk-box,
   &-topRank .chat-item.top3-notice,
-  &-topRank .chat-item .rank-icon {
+  &-topRank .chat-item .rank-icon,
+  &-recommendedRooms .left-container .room-info-ctnr {
     display: none !important;
   }
 }
@@ -163,7 +164,8 @@ $prefix: 'simplifyLiveroom-switch';
   .gift-control-panel .wish-icon,
   .gift-control-panel .wish-tip,
   .gift-control-panel .left-part-ctnr,
-  .web-live-player-gift-icon-wrap {
+  .web-live-player-gift-icon-wrap,
+  .gift-control-panel .gift-presets .gift-panel.gift-panel.gift-panel {
     display: none !important;
   }
   .gift-control-section,
@@ -187,6 +189,7 @@ $prefix: 'simplifyLiveroom-switch';
     .gift-presets {
       .gift-section {
         display: flex !important;
+        justify-content: flex-end !important;
       }
     }
     .more-gift-section {

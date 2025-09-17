@@ -19,8 +19,8 @@
       color: black;
     }
     body.dark & {
-      background-color: #444;
-      color: #eee;
+      color: var(--be-color-text-title, #eee);
+      background-color: var(--be-color-panel-bg, #444);
       &:hover {
         color: var(--theme-color);
       }
@@ -28,15 +28,19 @@
   }
 }
 .bili-comment-container {
+  display: flex !important;
+  flex-direction: column !important;
   &.bili-dyn-comment .reply-list {
     padding-bottom: 8px !important;
   }
   .fold-comment {
+    order: 1;
     font-size: 13px;
   }
   .at-panel,
   .emoji-panel,
+  .reply-box .box-expand,
   .reply-operation .operation-list {
-    z-index: 111;
+    z-index: 111 !important;
   }
 }

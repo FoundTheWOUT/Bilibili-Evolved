@@ -36,6 +36,7 @@ export default Vue.extend({
   }
   textarea {
     resize: none;
+    field-sizing: content;
     width: 0;
     flex: 1 0 0;
     padding: 4px 6px;
@@ -47,14 +48,14 @@ export default Vue.extend({
     color: black;
     font-size: inherit;
     body.dark & {
-      color: #eee;
+      color: var(--be-color-text-content, #eee);
     }
     &:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
     &::-webkit-input-placeholder {
-      color: #888;
+      color: var(--be-color-text-placeholder, #888);
     }
   }
 }

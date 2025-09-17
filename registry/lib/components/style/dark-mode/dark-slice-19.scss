@@ -1,0 +1,47 @@
+@import './dark-definitions';
+@import 'common';
+
+.relation-card-info-option {
+  .follow-btn {
+    @include background-color();
+  }
+}
+
+.login-scan__qrcode {
+  @include background-color('f');
+  .qrcode__tip {
+    @include background-color('3');
+    img {
+      @include background-color();
+    }
+    span {
+      @include color('a');
+    }
+  }
+}
+
+.scan-tips-icon {
+  @include background-color('2');
+}
+
+.btn_other {
+  @include background-color('3');
+  @include border-color('4');
+  @include color('f');
+}
+
+#sections-vm .z-section-blocks {
+  @include background-color();
+}
+
+.follow-sidebar-item {
+  .vui_sidebar-item {
+    &:hover {
+      @include background-color('3');
+    }
+    &.vui_sidebar-item--active,
+    &.vui_sidebar-item--active:hover {
+      @include theme-background-color();
+    }
+  }
+}

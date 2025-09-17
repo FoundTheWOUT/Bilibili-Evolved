@@ -1,10 +1,17 @@
-import { registerAndGetData } from '@/plugins/data'
-import { defineComponentMetadata } from '@/components/define'
+import {
+  defineComponentMetadata,
+  defineOptionsMetadata,
+  OptionsOfMetadata,
+} from '@/components/define'
+import { getComponentSettings } from '@/core/settings'
 import { isIframe, isNotHtml, matchPattern } from '@/core/utils'
 import { useScopedConsole } from '@/core/utils/log'
+import { registerAndGetData } from '@/plugins/data'
+import { cleanAnchors } from './anchor'
 
 const displayName = '网址参数清理'
-const console = useScopedConsole(displayName)
+const name = 'urlParamsClean'
+export const console = useScopedConsole(displayName)
 const entry = async () => {
   if (isNotHtml() || isIframe()) {
     return
@@ -75,6 +82,10 @@ const entry = async () => {
       param: 'session_id',
     },
     {
+      match: /\/\/live\.bilibili\.com\//,
+      param: 'is_room_feed',
+    },
+    {
       match: /\/\/www\.bilibili\.com\/bangumi\//,
       param: 'theme',
     },
@@ -102,7 +113,7 @@ const entry = async () => {
   const getCleanUrl = (originalUrl: string) => {
     const url = new URL(originalUrl, location.origin)
     const urlParams = [...new URLSearchParams(url.search).entries()].map(
-      ([key, value]) => `${key}=${value}`,
+      ([key, value]) => `${key}=${encodeURIComponent(value)}`,
     )
     if (urlParams.some(param => noClean.some(it => param.includes(it)))) {
       return originalUrl
@@ -141,6 +152,9 @@ const entry = async () => {
       url: string,
       ...restArgs: unknown[]
     ) {
+      if (url === undefined || url === null) {
+        return original.call(this, data, unused, url, ...restArgs)
+      }
       const resolvedUrl = (() => {
         try {
           return new URL(url, location.origin + location.pathname).toString()
@@ -170,16 +184,31 @@ const entry = async () => {
     }
   }
 
+  if (getComponentSettings<Options>(name).options.cleanAnchors) {
+    cleanAnchors(getCleanUrl)
+  }
+
   const { fullyLoaded } = await import('@/core/life-cycle')
   const { urlChange } = await import('@/core/observer')
   fullyLoaded(() => {
     urlChange(() => clean())
   })
 }
+
+const options = defineOptionsMetadata({
+  cleanAnchors: {
+    defaultValue: true,
+    displayName: '清理页面中的 A 标签',
+  },
+})
+
+type Options = OptionsOfMetadata<typeof options>
+
 export const component = defineComponentMetadata({
-  name: 'urlParamsClean',
+  name,
   displayName,
   entry,
+  options,
   tags: [componentsTags.utils],
   /* spell-checker: disable */
   urlExclude: [/game\.bilibili\.com\/fgo/, /live\.bilibili\.com\/p\/html\/live-app-hotrank\//],

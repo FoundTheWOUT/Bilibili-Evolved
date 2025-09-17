@@ -1,5 +1,14 @@
 <template>
   <div class="rpc-config download-video-config-section">
+    <div class="online-assets-download">
+      <div class="download-video-config-item">
+        <div class="download-video-config-title">使用 aria2 下载附属资源:</div>
+        <SwitchBox v-model="isPluginDownloadAssets" @change="saveAssetsSettings" />
+      </div>
+      <div class="download-video-config-description">
+        存在于服务器的附属资源 (例如封面) 可以一并发送到 aria2 下载.
+      </div>
+    </div>
     <div v-if="isRenaming" class="profile-select">
       <div class="profile-item-name">重命名 RPC 预设:</div>
       <TextBox ref="renameInput" v-model="profileRename" />
@@ -69,17 +78,19 @@
 <script lang="ts">
 import { getComponentSettings } from '@/core/settings'
 import { Toast } from '@/core/toast'
-import { TextBox, VButton, VIcon, VDropdown, TextArea } from '@/ui'
+import { TextBox, VButton, VIcon, VDropdown, TextArea, SwitchBox } from '@/ui'
 import { Aria2RpcProfile, defaultProfile } from './rpc-profiles'
 
 interface Options {
   rpcProfiles: Aria2RpcProfile[]
   selectedRpcProfileName: string
+  isPluginDownloadAssets: boolean
 }
 const { options: storedOptions } = getComponentSettings('downloadVideo')
 const defaultOptions: Options = {
   rpcProfiles: [defaultProfile],
   selectedRpcProfileName: defaultProfile.name,
+  isPluginDownloadAssets: false,
 }
 const options = { ...defaultOptions, ...storedOptions }
 const handleMissingProfile = () => {
@@ -99,6 +110,7 @@ export default Vue.extend({
     VIcon,
     VDropdown,
     TextArea,
+    SwitchBox,
   },
   data() {
     return {
@@ -106,13 +118,19 @@ export default Vue.extend({
       profileRename: '',
       rpcProfiles: options.rpcProfiles,
       selectedRpcProfile: lastSelectedProfile,
+      isPluginDownloadAssets: options.isPluginDownloadAssets,
     }
   },
   methods: {
-    saveSettings() {
+    saveProfileSettings() {
       options.selectedRpcProfileName = this.selectedRpcProfile.name
       options.rpcProfiles = this.rpcProfiles
-      Object.assign(storedOptions, options)
+      storedOptions.selectedRpcProfileName = options.selectedRpcProfileName
+      storedOptions.rpcProfiles = options.rpcProfiles
+    },
+    saveAssetsSettings() {
+      options.isPluginDownloadAssets = this.isPluginDownloadAssets
+      storedOptions.isPluginDownloadAssets = options.isPluginDownloadAssets
     },
     async startRename() {
       this.profileRename = this.selectedRpcProfile.name
@@ -134,7 +152,7 @@ export default Vue.extend({
       }
       this.selectedRpcProfile.name = this.profileRename
       this.isRenaming = false
-      this.saveSettings()
+      this.saveProfileSettings()
     },
     newProfile() {
       const newProfile: Aria2RpcProfile = { ...this.selectedRpcProfile }
@@ -196,6 +214,10 @@ export default Vue.extend({
   }
   .profile-method {
     align-self: flex-start;
+  }
+  .online-assets-download {
+    flex-direction: column;
+    align-items: start;
   }
 }
 </style>

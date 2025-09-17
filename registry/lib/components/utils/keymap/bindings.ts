@@ -1,6 +1,7 @@
-import { isTyping, matchUrlPattern } from '@/core/utils'
+import { getActiveElement, isTyping, matchUrlPattern } from '@/core/utils'
 import { mediaListUrls, watchlaterUrls } from '@/core/utils/urls'
 import { clickElement, changeVideoTime, showTip } from './actions'
+import { shadowDomObserver } from '@/core/shadow-root'
 
 export interface KeyBindingActionContext {
   binding: KeyBinding
@@ -15,7 +16,10 @@ export interface KeyBindingAction {
   displayName: string
   run: (context: KeyBindingActionContext) => unknown
   prevent?: boolean
+  /** 默认打字时忽略快捷键, 将此属性设置为 false 可以在打字时允许触发快捷键 */
   ignoreTyping?: boolean
+  /** 默认聚焦在可聚焦元素时不忽略快捷键, 将此属性设置为 true 可以在聚焦时禁止触发快捷键 */
+  ignoreFocus?: boolean
 }
 export interface KeyBinding {
   keys: string[]
@@ -29,7 +33,7 @@ export const loadKeyBindings = lodash.once((bindings: KeyBinding[]) => {
     enable: true,
     bindings,
   }
-  document.body.addEventListener('keydown', (e: KeyboardEvent & { [key: string]: boolean }) => {
+  const keyboardHandler = (e: KeyboardEvent & { [key: string]: boolean }) => {
     if (!config.enable) {
       return
     }
@@ -42,6 +46,26 @@ export const loadKeyBindings = lodash.once((bindings: KeyBinding[]) => {
       if (binding.action.ignoreTyping !== false && isTyping()) {
         return
       }
+
+      // 忽略其他可聚焦元素
+      const hasElementFocus = (() => {
+        const activeElement = getActiveElement()
+        if (([document.body, null] as (Element | null)[]).includes(activeElement)) {
+          return false
+        }
+        if (activeElement instanceof HTMLMediaElement) {
+          return false
+        }
+        return true
+      })()
+      if (
+        binding.action.ignoreFocus === false &&
+        binding.action.ignoreTyping !== false &&
+        hasElementFocus
+      ) {
+        return
+      }
+
       const key = e.key.toLowerCase()
 
       // 全景视频禁用 WASD 快捷键
@@ -87,10 +111,15 @@ export const loadKeyBindings = lodash.once((bindings: KeyBinding[]) => {
 
       const actionSuccess = !lodash.isNil(actionResult)
       if (binding.action.prevent ?? actionSuccess) {
-        e.stopPropagation()
+        e.stopImmediatePropagation()
         e.preventDefault()
       }
     })
+  }
+  document.body.addEventListener('keydown', keyboardHandler, { capture: true })
+  shadowDomObserver.watchShadowDom({
+    added: shadowDom =>
+      shadowDom.shadowRoot.addEventListener('keydown', keyboardHandler, { capture: true }),
   })
   return config
 })

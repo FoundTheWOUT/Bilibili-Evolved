@@ -32,12 +32,16 @@ const entry = async () => {
         if (target.hasAttribute('click-title')) {
           return
         }
+        if (target.hasAttribute('data-pics')) {
+          return
+        }
         if (
           [
             'bili-rich-text__action',
             'bili-rich-text-topic',
             'bili-rich-text-module',
             'bili-rich-text-link',
+            'bili-rich-text-viewpic',
           ].some(className => target.classList.contains(className))
         ) {
           return

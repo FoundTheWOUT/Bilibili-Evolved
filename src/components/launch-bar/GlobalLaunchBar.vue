@@ -9,43 +9,40 @@
     <LaunchBar ref="launchBar" @close="close()" />
   </VPopup>
 </template>
-<script lang="ts">
+<script setup lang="ts">
+import { ref, watch, nextTick, onMounted } from 'vue'
 import VPopup from '@/ui/VPopup.vue'
 import LaunchBar from './LaunchBar.vue'
 
-export default Vue.extend({
-  components: {
-    LaunchBar,
-    VPopup,
-  },
-  data() {
-    return {
-      show: true,
-    }
-  },
-  watch: {
-    show(value: boolean) {
-      if (value) {
-        this.focus()
-      }
-    },
-  },
-  async mounted() {
-    await this.$nextTick()
-    this.focus()
-  },
-  methods: {
-    focus() {
-      const input = this.$refs.launchBar?.$refs.input as HTMLInputElement
-      input?.focus()
-      input?.select()
-    },
-    close() {
-      this.show = false
-      const input = this.$refs.launchBar?.$refs.input as HTMLInputElement
-      input?.blur()
-    },
-  },
+const launchBar = ref<InstanceType<typeof LaunchBar>>()
+
+const show = ref(true)
+
+const focus = () => {
+  const input = launchBar.value?.input as HTMLInputElement
+  input?.focus()
+  input?.select()
+}
+
+const close = () => {
+  show.value = false
+  const input = launchBar.value?.input as HTMLInputElement
+  input?.blur()
+}
+
+watch(show, (value: boolean) => {
+  if (value) {
+    focus()
+  }
+})
+
+onMounted(async () => {
+  await nextTick()
+  focus()
+})
+
+defineExpose({
+  show,
 })
 </script>
 <style lang="scss">
@@ -73,7 +70,6 @@ export default Vue.extend({
       --color: #eee;
     }
     .launch-bar-suggest-list {
-      transition: 0.2s ease-out;
       top: calc(100% + 8px);
       max-height: calc(80vh - 16px - #{$barHeight});
       @include no-scrollbar();

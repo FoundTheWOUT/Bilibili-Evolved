@@ -3,6 +3,7 @@ import { addComponentListener } from '@/core/settings'
 import { isIframe, isNotHtml, matchUrlPattern, mountVueComponent } from '@/core/utils'
 import { setupNotifyStyle } from './notify-style'
 import { setupLinkPopupContentAlignStyle } from './link-popup-content-align-style'
+import { migrateOrders } from './orders-migration'
 
 export const entry: ComponentEntry = async ({ metadata: { name } }) => {
   // const url = document.URL.replace(location.search, '')
@@ -34,6 +35,9 @@ export const entry: ComponentEntry = async ({ metadata: { name } }) => {
     'https://www.bilibili.com/read',
     'https://www.bilibili.com/opus',
     'https://www.bilibili.com/account/history',
+    'https://www.bilibili.com/history',
+    'https://www.bilibili.com/v/topic/detail',
+    'https://www.bilibili.com/watchlater/list',
   ]
   if (!globalFixedExclude.some(p => matchUrlPattern(p))) {
     addComponentListener(
@@ -48,6 +52,7 @@ export const entry: ComponentEntry = async ({ metadata: { name } }) => {
   if (matchUrlPattern('https://www.bilibili.com/account/history')) {
     document.body.classList.add('history-page')
   }
+  migrateOrders()
   const CustomNavbar = await import('./CustomNavbar.vue')
   const customNavbar: Vue & {
     styles: string[]

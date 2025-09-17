@@ -407,7 +407,6 @@ export class DoubleClickEvent {
   singleClickHandler: (e: MouseEvent) => void = none
 
   private clickedOnce = false
-  // eslint-disable-next-line class-methods-use-this
   private readonly stopPropagationHandler = (e: MouseEvent) => {
     e.stopImmediatePropagation()
   }
@@ -519,9 +518,18 @@ export const playerReady = async () => {
 //   unsafeWindow.aid = info.aid.toString()
 //   return info.aid as string
 // }
+
+/** 获取当前聚焦的元素 */
+export const getActiveElement = () => {
+  let { activeElement } = document
+  while (activeElement.shadowRoot !== null) {
+    activeElement = activeElement.shadowRoot.activeElement
+  }
+  return activeElement
+}
 /** 是否正在打字 */
 export const isTyping = () => {
-  const { activeElement } = document
+  const activeElement = getActiveElement()
   if (!activeElement) {
     return false
   }
@@ -700,4 +708,25 @@ export const simulateClick = (target: EventTarget, eventParams?: PointerEventIni
   target.dispatchEvent(pointerUpEvent)
   target.dispatchEvent(mouseUpEvent)
   target.dispatchEvent(clickEventEvent)
+}
+
+/** 尝试获取元素对应的 Vue Data (仅适用于 Vue 2 组件) */
+export const getVue2Data = (el: any) =>
+  // eslint-disable-next-line no-underscore-dangle
+  el.__vue__ ?? el.parentElement.__vue__ ?? el.children[0].__vue__ ?? el.__vueParentComponent
+
+/**
+ * 创建一个vue组件并动态注入 props
+ *
+ * 示例（脚本组件额外设置、小组件中传入参数值）：
+ *   extraOptions: () => import('./Setting.vue').then(m => createComponentWithProps(m.default, { isWidget: false })),
+ */
+export function createComponentWithProps(component: any, props: Record<string, any>) {
+  return Vue.extend({
+    render(h) {
+      return h(component, {
+        props,
+      })
+    },
+  })
 }

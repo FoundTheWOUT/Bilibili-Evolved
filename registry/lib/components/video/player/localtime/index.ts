@@ -30,7 +30,11 @@ const parseTime = (t: Date, options: any): string => {
 
 enum Position {
   TR = '右上角',
-  TL = '左上角'
+  TL = '左上角',
+  TC = '顶部中央',
+  BR = '右下角',
+  BL = '左下角',
+  BC = '底部中央',
 }
 
 const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
@@ -41,13 +45,16 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
     top: '0',
     right: '0',
     zIndex: '10',
-    fontSize: 'x-large',
+    fontFamily: 'Arial',
+    fontSize: '24px',
     fontWeight: 'bold',
     margin: '1rem',
   }
   const dyStyle = {
     color: options.color,
     opacity: options.opacity,
+    fontFamily: options.fontFamily,
+    fontSize: `${options.fontSize}px`,
   }
 
   // 绑定样式
@@ -58,19 +65,73 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
   // 绑定动态样式
   Object.keys(dyStyle).forEach(key => {
     addComponentListener(`${metadata.name}.${key}`, (value: string) => {
-      time.style[key] = value
+      if (key === 'fontSize') {
+        time.style.fontSize = `${value}px`
+      } else {
+        time.style[key] = value
+      }
     })
   })
 
-  addComponentListener(`${metadata.name}.position`, (value: string) => {
-    if (value === Position.TR) {
-      time.style.left = ''
-      time.style.right = '0'
-    } else if (value === Position.TL) {
-      time.style.right = ''
-      time.style.left = '0'
-    }
-  }, true)
+  function patchStyle({
+    top,
+    left,
+    bottom,
+    right,
+    transform,
+  }: Partial<{
+    top: string
+    left: string
+    bottom: string
+    right: string
+    transform: string
+  }>) {
+    time.style.top = top ?? ''
+    time.style.left = left ?? ''
+    time.style.bottom = bottom ?? ''
+    time.style.right = right ?? ''
+    time.style.transform = transform ?? ''
+  }
+
+  addComponentListener(
+    `${metadata.name}.position`,
+    (value: string) => {
+      if (value === Position.TR) {
+        patchStyle({
+          top: '0',
+          right: '0',
+        })
+      } else if (value === Position.TL) {
+        patchStyle({
+          top: '0',
+          left: '0',
+        })
+      } else if (value === Position.TC) {
+        patchStyle({
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        })
+      } else if (value === Position.BR) {
+        patchStyle({
+          bottom: '0',
+          right: '0',
+        })
+      } else if (value === Position.BL) {
+        patchStyle({
+          bottom: '0',
+          left: '0',
+        })
+      } else if (value === Position.BC) {
+        patchStyle({
+          bottom: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        })
+      }
+    },
+    true,
+  )
 
   videoChange(async () => {
     const video = await playerAgent.query.video.wrap()
@@ -130,6 +191,19 @@ export const component: ComponentMetadata = {
       defaultValue: Position.TR,
       displayName: '位置',
       dropdownEnum: Position,
+    },
+    fontFamily: {
+      defaultValue: '',
+      displayName: '字体',
+    },
+    fontSize: {
+      defaultValue: 24,
+      displayName: '尺寸',
+      slider: {
+        min: 10,
+        max: 100,
+        step: 1,
+      },
     },
   },
   urlInclude: allVideoUrls,
