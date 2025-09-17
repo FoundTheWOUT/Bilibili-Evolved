@@ -76,30 +76,27 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
   addComponentListener(
     `${metadata.name}.position`,
     (value: string) => {
+      // clear style
+      time.style.top = ''
+      time.style.left = ''
+      time.style.bottom = ''
+      time.style.right = ''
+      time.style.transform = ''
       if (value === Position.TR) {
-        time.style.left = ''
         time.style.right = '0'
       } else if (value === Position.TL) {
-        time.style.right = ''
         time.style.left = '0'
-      } else if (value === Position.BR) {
-        time.style.left = ''
-        time.style.right = '0'
-        time.style.top = ''
-        time.style.bottom = '0'
-      } else if (value === Position.BL) {
-        time.style.right = ''
-        time.style.left = '0'
-        time.style.top = ''
-        time.style.bottom = '0'
       } else if (value === Position.TC) {
-        time.style.right = ''
         time.style.left = '50%'
         time.style.transform = 'translateX(-50%)'
+      } else if (value === Position.BR) {
+        time.style.right = '0'
+        time.style.bottom = '0'
+      } else if (value === Position.BL) {
+        time.style.left = '0'
+        time.style.bottom = '0'
       } else if (value === Position.BC) {
-        time.style.right = ''
         time.style.left = '50%'
-        time.style.top = ''
         time.style.bottom = '0'
         time.style.transform = 'translateX(-50%)'
       }
