@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - master-cdn
-      - preview
 jobs:
   build:
     runs-on: ubuntu-latest
