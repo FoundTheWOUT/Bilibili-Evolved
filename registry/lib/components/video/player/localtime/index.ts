@@ -83,21 +83,24 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
       time.style.right = ''
       time.style.transform = ''
       if (value === Position.TR) {
+        time.style.top = '0'
         time.style.right = '0'
       } else if (value === Position.TL) {
+        time.style.top = '0'
         time.style.left = '0'
       } else if (value === Position.TC) {
+        time.style.top = '0'
         time.style.left = '50%'
         time.style.transform = 'translateX(-50%)'
       } else if (value === Position.BR) {
+        time.style.bottom = '0'
         time.style.right = '0'
-        time.style.bottom = '0'
       } else if (value === Position.BL) {
+        time.style.bottom = '0'
         time.style.left = '0'
-        time.style.bottom = '0'
       } else if (value === Position.BC) {
-        time.style.left = '50%'
         time.style.bottom = '0'
+        time.style.left = '50%'
         time.style.transform = 'translateX(-50%)'
       }
     },
