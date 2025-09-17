@@ -73,35 +73,61 @@ const entry: ComponentEntry = async ({ settings: { options }, metadata }) => {
     })
   })
 
+  function patchStyle({
+    top,
+    left,
+    bottom,
+    right,
+    transform,
+  }: Partial<{
+    top: string
+    left: string
+    bottom: string
+    right: string
+    transform: string
+  }>) {
+    time.style.top = top ?? ''
+    time.style.left = left ?? ''
+    time.style.bottom = bottom ?? ''
+    time.style.right = right ?? ''
+    time.style.transform = transform ?? ''
+  }
+
   addComponentListener(
     `${metadata.name}.position`,
     (value: string) => {
-      // clear style
-      time.style.top = ''
-      time.style.left = ''
-      time.style.bottom = ''
-      time.style.right = ''
-      time.style.transform = ''
       if (value === Position.TR) {
-        time.style.top = '0'
-        time.style.right = '0'
+        patchStyle({
+          top: '0',
+          right: '0',
+        })
       } else if (value === Position.TL) {
-        time.style.top = '0'
-        time.style.left = '0'
+        patchStyle({
+          top: '0',
+          left: '0',
+        })
       } else if (value === Position.TC) {
-        time.style.top = '0'
-        time.style.left = '50%'
-        time.style.transform = 'translateX(-50%)'
+        patchStyle({
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        })
       } else if (value === Position.BR) {
-        time.style.bottom = '0'
-        time.style.right = '0'
+        patchStyle({
+          bottom: '0',
+          right: '0',
+        })
       } else if (value === Position.BL) {
-        time.style.bottom = '0'
-        time.style.left = '0'
+        patchStyle({
+          bottom: '0',
+          left: '0',
+        })
       } else if (value === Position.BC) {
-        time.style.bottom = '0'
-        time.style.left = '50%'
-        time.style.transform = 'translateX(-50%)'
+        patchStyle({
+          bottom: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        })
       }
     },
     true,
